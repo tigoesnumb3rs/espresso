@@ -26,6 +26,7 @@ class Constraint {
 public:
   virtual const double dist(Particle *p1, double ppos[3], Particle *c_p, double *dist, double *vec) const = 0;
   virtual const int ia_type() const = 0;
+  virtual *double force() const = 0;
 };
 
 class Wall : Constraint {
