@@ -19,10 +19,13 @@
 
 #include "tests_tcl.hpp"
 
+#include <iostream>
+
 #ifdef CUDA
 
 int tclcommand_test_domain_decomposition_gpu(ClientData data, Tcl_Interp *interp, int argc, char **argv) {
-  return domain_decomposition_unit_test() ? TCL_OK : TCL_ERROR;
+  bool ret = domain_decomposition_gpu_unit_test();
+  return ret ? TCL_OK : TCL_ERROR;
 }
 
 #endif

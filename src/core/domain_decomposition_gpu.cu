@@ -163,7 +163,7 @@ static bool test_neighbor_count();
 __global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, const uint2 *cells, const float3 *xyz, unsigned int *neighbors, float rcut2);
 __global__ static void nearestNeighbors_n2(unsigned int n_part, const float3 *xyz, unsigned int *neighbors, float rcut2);
 
-bool domain_decompositon_unit_test() {
+bool domain_decomposition_gpu_unit_test() {
   bool result = true;
 
   result &= test_memory_management();

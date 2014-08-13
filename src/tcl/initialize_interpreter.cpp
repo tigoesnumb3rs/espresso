@@ -57,7 +57,7 @@
 #include "tuning.hpp"
 #include "electrokinetics_tcl.hpp"
 #include "actor/HarmonicWell_tcl.hpp"
-
+#include "tests_tcl.hpp"
 
 #ifdef TK
 #include <tk.h>
@@ -218,6 +218,8 @@ static void register_tcl_commands(Tcl_Interp* interp) {
   REGISTER_COMMAND("electrokinetics", tclcommand_electrokinetics);
 #ifdef CUDA
   REGISTER_COMMAND("harmonic_well", tclcommand_HarmonicWell);
+  /* Unit test for gpu domain decomposition */
+  REGISTER_COMMAND("test_domain_decomposition_gpu", tclcommand_test_domain_decomposition_gpu);
 #endif
 }
 
