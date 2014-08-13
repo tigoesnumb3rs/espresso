@@ -69,6 +69,7 @@ libEspressoTcl_la_SOURCES = \
 	statistics_observable_tcl.cpp statistics_observable_tcl.hpp \
 	statistics_wallstuff_tcl.cpp statistics_wallstuff_tcl.hpp \
 	statistics_tcl.cpp statistics_tcl.hpp \
+	tests_tcl.cpp tests_tcl.hpp \
 	thermostat_tcl.cpp thermostat_tcl.hpp \
 	topology_tcl.cpp \
 	tuning_tcl.cpp \

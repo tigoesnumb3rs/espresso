@@ -8,6 +8,7 @@
 #include <ctime>
 
 #include "domain_decomposition_gpu.hpp"
+#include "domain_decomposition_gpu_test.hpp"
 #include "cuda_utils.hpp"
 
 /* Forward declarations of gpu kernels. */

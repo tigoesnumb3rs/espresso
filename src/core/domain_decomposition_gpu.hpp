@@ -1,5 +1,5 @@
-#ifndef CUDA_DD_HPP
-#define CUDA_DD_HPP
+#ifndef __GPU_DD_HPP
+#define __GPU_DD_HPP
 
 #include <cuda.h>
 
@@ -32,7 +32,5 @@ private:
   void init_device_memory(bool particles, bool dd);
   void free_device_memory(bool particles, bool dd);
 };
-
-bool domain_decomposition_unit_test();
 
 #endif
