@@ -5,7 +5,8 @@
 #include <thrust/sort.h>
 #include <cstdlib>
 #include <iostream>
-#include <ctime>
+
+#include "random.hpp"
 
 #include "domain_decomposition_gpu.hpp"
 #include "domain_decomposition_gpu_test.hpp"
@@ -23,6 +24,8 @@ __global__ static void hashAtoms(unsigned int n_part, float3 hi, const float3 *x
 
 template<typename T>
 __global__ static void unsortArrays(unsigned int *indexes, T *src, T *dst, unsigned int n);
+template<typename T>
+__global__ static void sortArrays(unsigned int *indexes, T *src, T *dst, unsigned int n);
 
 /* Class Implementation */
 
@@ -38,17 +41,26 @@ DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part
 }
 
 DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, float cutoff) : n_part(_n_part), box(_box) {
+  update_cells_from_cutoff(cutoff);
+  init_device_memory(true, true);
+}
+
+void DomainDecompositionGpu::update_cells_from_cutoff(float cutoff) {
   /* Need to take the floor to be on the safe side */
   n_cells.x = floor(box.x / cutoff);
   n_cells.y = floor(box.y / cutoff);
   n_cells.z = floor(box.z / cutoff);
+  total_cells = n_cells.x*n_cells.y*n_cells.z;
 
   hi.x = n_cells.x/box.x;
   hi.y = n_cells.y/box.y;
   hi.z = n_cells.z/box.z;
-  total_cells = n_cells.x*n_cells.y*n_cells.z;
+}
 
-  init_device_memory(true, true);
+void DomainDecompositionGpu::set_cutoff(float cutoff) {
+  update_cells_from_cutoff(cutoff);
+  free_device_memory(false,true);
+  init_device_memory(false,true);
 }
 
 DomainDecompositionGpu::~DomainDecompositionGpu() {
@@ -101,10 +113,27 @@ void DomainDecompositionGpu::build(float3 *xyz) {
   KERNELCALL_shared(sortParticlesGenerateCellist, grid, block, smemsize, (n_part, xyz, xyz_sorted, hashes, indexes, cells));
 }
 
+
+
 void DomainDecompositionGpu::set_n_part(unsigned int _n_part) {
   n_part = _n_part;  
   free_device_memory(true, false);
   init_device_memory(true, false);
+}
+
+template<typename T>
+void DomainDecompositionGpu::sort(T *src, T* dst) {
+  dim3 block(1,1,1), grid(1,1,1);
+
+  if(n_part < 128) {
+    block.x = n_part;
+    grid.x = 1;    
+  } else {
+    block.x = 128;
+    grid.x = max(1, (n_part + block.x - 1) / block.x);
+  }
+
+  KERNELCALL(sortArrays<T>, grid, block, (indexes, src, dst, n_part));
 }
 
 template<typename T>
@@ -123,6 +152,16 @@ void DomainDecompositionGpu::unsort(T *src, T* dst) {
 }
 
 /* GPU Kernels */
+
+template<typename T>
+__global__ static void sortArrays(unsigned int *indexes, T *src, T *dst, unsigned int n) {
+  unsigned int id = blockDim.x*blockIdx.x + threadIdx.x;
+
+  if(id >= n)
+    return;
+
+  dst[id] = src[indexes[id]];
+}
 
 template<typename T>
 __global__ static void unsortArrays(unsigned int *indexes, T *src, T *dst, unsigned int n) {
@@ -184,15 +223,13 @@ __global__ static void hashAtoms(unsigned int n_part, float3 hi, const float3 *x
   /** Unit test for the GPU Domain Decomposition
       ------------------------------------------
       The testing strategy is as follows:
-      First the memory management is testet by changing the number of particles and
-      the cutoff/number of cells and see if this is handled correctly.
-      Then the function is testet by calculation the neighbor count of a know particle
-      configuration. This is also calculated via an nsquare algorithm to check its implementation. 
-      Then the neighbor count of a random system is compared between the calculation with domain decomposition and the nquared algorithm.
+      The function is tested by calculating the neighbor count of a know particle
+      configuration. This is also calculated via an nsquare algorithm to check its implementation.
+      Then the neighbor count of a random system is compared between the calculation with 
+      domain decomposition and the nquared algorithm.
   **/
 
   /* Functions for unit testing */
-static bool test_memory_management();
 static bool test_neighbor_count();
 __global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, const uint2 *cells, const float3 *xyz, unsigned int *neighbors, float rcut2);
 __global__ static void nearestNeighbors_n2(unsigned int n_part, const float3 *xyz, unsigned int *neighbors, float rcut2);
@@ -200,7 +237,6 @@ __global__ static void nearestNeighbors_n2(unsigned int n_part, const float3 *xy
 bool domain_decomposition_gpu_unit_test() {
   bool result = true;
 
-  result &= test_memory_management();
   result &= test_neighbor_count();
 
   return result;
@@ -208,10 +244,6 @@ bool domain_decomposition_gpu_unit_test() {
 
 __device__ static inline float dist2(float3 a, float3 b) {
   return ( (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
-}
-
-static bool test_memory_management() {
-  return false;
 }
 
 bool test_decomposition(DomainDecompositionGpu &dd) {
@@ -283,7 +315,11 @@ static bool test_neighbor_count() {
   box.z = 30;
   cutoff = 1.5;
 
-  float3 parts[11] = { {0.0f, 00.f, 0.0f }, // 1 
+  
+  /* This has the benefit of throwing an error if the number is wrong. */
+  #define N_TEST_PART 11
+
+  float3 parts_const[N_TEST_PART] = { {0.0f, 00.f, 0.0f }, // 1 
 		       {9.9f, 0.0f, 0.0f }, // 1
 		       {6.0f, 5.0f, 5.0f }, // 6
 		       {9.9f, 9.9f, 0.0f }, // 1
@@ -296,13 +332,15 @@ static bool test_neighbor_count() {
 		       {4.0f, 5.0f, 5.0f }  // 6 
   };
 
-unsigned int correct_count[11] = { 1, 1, 6, 1, 7, 6, 1, 6, 6, 6, 6 };
+  unsigned int correct_count[N_TEST_PART] = { 1, 1, 6, 1, 7, 6, 1, 6, 6, 6, 6 };
 
-  n_part = sizeof(parts)/sizeof(float3);
+  float3 *parts = parts_const;
+
+  n_part = N_TEST_PART;
 
   float3 *parts_d = 0;
-  cuda_safe_mem(cudaMalloc((void **)&parts_d, sizeof(parts)));
-  cuda_safe_mem(cudaMemcpy(parts_d, parts, sizeof(parts), cudaMemcpyHostToDevice));
+  cuda_safe_mem(cudaMalloc((void **)&parts_d, sizeof(parts_const)));
+  cuda_safe_mem(cudaMemcpy(parts_d, parts, sizeof(parts_const), cudaMemcpyHostToDevice));
   
   DomainDecompositionGpu dd(box, n_part, cutoff);
 
@@ -315,17 +353,17 @@ unsigned int correct_count[11] = { 1, 1, 6, 1, 7, 6, 1, 6, 6, 6, 6 };
   /* Sort particles into cells */
   dd.build(parts_d);
 
-  #ifdef GPU_DD_DEBUG
+#ifdef GPU_DD_DEBUG
   print_dd(dd);
-  #endif
+#endif
 
   /* Check result */
   if(!test_decomposition(dd))
     return false;
 
   unsigned int *neighbors_dd_d, *neighbors_n2_d;
-  unsigned int neighbors_dd[sizeof(parts)/sizeof(float3)];
-  unsigned int neighbors_n2[sizeof(parts)/sizeof(float3)];
+  unsigned int *neighbors_dd = (unsigned int *) malloc(n_part*sizeof(unsigned int));
+  unsigned int *neighbors_n2 = (unsigned int *) malloc(n_part*sizeof(unsigned int));
 
   cuda_safe_mem(cudaMalloc((void **)&neighbors_dd_d, n_part * sizeof(unsigned int)));
   cuda_safe_mem(cudaMalloc((void **)&neighbors_n2_d, n_part * sizeof(unsigned int)));
@@ -346,15 +384,82 @@ unsigned int correct_count[11] = { 1, 1, 6, 1, 7, 6, 1, 6, 6, 6, 6 };
   
   for(int i = 0; i < n_part; i++) {
     if( (neighbors_dd[i] != correct_count[i]) || (neighbors_n2[i] != correct_count[i])) {
-      #ifdef GPU_DD_DEBUG
+#ifdef GPU_DD_DEBUG
       printf("%d %d %d\n", i, neighbors_dd[i], neighbors_n2[i]);
-      #endif
+#endif
       return false;
     }
   }
   cuda_safe_mem(cudaFree(neighbors_dd_d));
   cuda_safe_mem(cudaFree(neighbors_n2_d));
   cuda_safe_mem(cudaFree(parts_d));
+
+  n_part = 2000;
+  
+  dd.set_n_part(n_part);
+  cutoff = 1.0;
+  dd.set_cutoff(cutoff);
+  n_cells = dd.get_n_cells();
+
+  /* Make random configuration */
+  parts = (float3 *)malloc(n_part * sizeof(float3));
+
+  for(int i = 0; i < n_part; i++) {
+    parts[i].x = box.x * d_random();
+    parts[i].y = box.y * d_random();
+    parts[i].z = box.z * d_random();
+  }
+
+  /* Copy configuration to Device */
+  cuda_safe_mem(cudaMalloc((void **)&parts_d, n_part * sizeof(float3)));
+  cuda_safe_mem(cudaMemcpy(parts_d, parts, n_part * sizeof(float3), cudaMemcpyHostToDevice));
+
+  dd.build(parts_d);
+
+  print_dd(dd);
+
+  /* Check result */
+  if(!test_decomposition(dd))
+    return false;
+
+  cuda_safe_mem(cudaMalloc((void **)&neighbors_dd_d, n_part * sizeof(unsigned int)));
+  cuda_safe_mem(cudaMalloc((void **)&neighbors_n2_d, n_part * sizeof(unsigned int)));
+
+  dim3 block_dd_ran(n_cells.x,n_cells.y/2,n_cells.z/3), grid_dd_ran(1,2,3);
+
+  dim3 block_n2_ran(128,1,1), grid_n2_ran(n_part/128+1,1,1);
+  
+  cutoff2 = cutoff*cutoff;
+
+  neighbors_n2 = (unsigned int *)realloc(neighbors_n2, n_part * sizeof(unsigned int));
+  neighbors_dd = (unsigned int *)realloc(neighbors_dd, n_part * sizeof(unsigned int));
+
+  /* Count using domain decomposition and sorted position array */
+  KERNELCALL(nearestNeighbors, grid_dd_ran, block_dd_ran, (n_part, dd.get_n_cells(), dd.get_cells(), dd.get_xyz_sorted(), neighbors_dd_d,cutoff2));
+  /* Count directly, also using sorted position array to get same particle order. */
+  KERNELCALL(nearestNeighbors_n2, grid_n2_ran, block_n2_ran, (n_part, parts_d, neighbors_n2_d, cutoff2));
+
+  cuda_safe_mem(cudaMemcpy(neighbors_n2, neighbors_n2_d, n_part * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+
+  dd.unsort<unsigned int>(neighbors_dd_d, neighbors_n2_d);
+  cuda_safe_mem(cudaMemcpy(neighbors_dd, neighbors_n2_d, n_part * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+  
+  for(int i = 0; i < n_part; i++) {
+    if(neighbors_dd[i] != neighbors_n2[i]) {
+#ifdef GPU_DD_DEBUG
+      printf("%d %d %d\n", i, neighbors_dd[i], neighbors_n2[i]);
+#endif
+      return false;
+    }
+  }
+ 
+  /* Clean up */
+  cuda_safe_mem(cudaFree(neighbors_dd_d));
+  cuda_safe_mem(cudaFree(neighbors_n2_d));
+  cuda_safe_mem(cudaFree(parts_d));
+  free(parts);
+  free(neighbors_n2);
+  free(neighbors_dd);
 
   return true;
 }
