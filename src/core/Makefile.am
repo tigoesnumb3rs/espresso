@@ -178,7 +178,8 @@ CUDA_HEADER_FILES = \
 	p3m_gpu.hpp \
 	cuda_init.hpp \
 	actor/mmm-common_cuda.hpp actor/specfunc_cuda.hpp \
-	electrokinetics.hpp
+	electrokinetics.hpp \
+	domain_decomposition_gpu.hpp
 
 CUDA_SOURCE_FILES = \
 	cuda_init_cuda.cu \
@@ -188,7 +189,8 @@ CUDA_SOURCE_FILES = \
 	p3m_gpu_cuda.cu \
 	EspressoSystemInterface_cuda.cu \
 	actor/Mmm1dgpuForce_cuda.cu \
-	actor/HarmonicWell_cuda.cu
+	actor/HarmonicWell_cuda.cu \
+	domain_decomposition_gpu.cu
 
 # include the dependency tracking files
 include ./$(DEPDIR)/cuda_init_cuda.Plo
@@ -199,6 +201,7 @@ include ./$(DEPDIR)/p3m_gpu_cuda.Plo
 include ./$(DEPDIR)/EspressoSystemInterface_cuda.Plo
 include ./actor/$(DEPDIR)/HarmonicWell_cuda.Plo
 include ./actor/$(DEPDIR)/Mmm1dgpuForce_cuda.Plo
+include ./$(DEPDIR)/domain_decomposition_gpu.cu
 
 LOFILES = $(CUDA_SOURCE_FILES:.cu=.lo)
 
