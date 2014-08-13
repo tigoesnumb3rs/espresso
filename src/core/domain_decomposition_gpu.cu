@@ -18,11 +18,23 @@ __global__ static void hashAtoms(unsigned int n_part, float3 hi, const float3 *x
 
 /* Class Implementation */
 
-DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, uint3 _n_cells) {
+DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, uint3 _n_cells) : n_part(_n_part), box(_box) {
 
-  n_part = _n_part;
-  box = _box;
   n_cells = _n_cells;
+  hi.x = n_cells.x/box.x;
+  hi.y = n_cells.y/box.y;
+  hi.z = n_cells.z/box.z;
+  total_cells = n_cells.x*n_cells.y*n_cells.z;
+
+  init_device_memory(true, true);
+}
+
+DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, float cutoff) : n_part(_n_part), box(_box) {
+  /* Need to take the floor to be on the safe side */
+  n_cells.x = floor(box.x / cutoff);
+  n_cells.y = floor(box.y / cutoff);
+  n_cells.z = floor(box.z / cutoff);
+
   hi.x = n_cells.x/box.x;
   hi.y = n_cells.y/box.y;
   hi.z = n_cells.z/box.z;
@@ -134,11 +146,46 @@ __global__ static void hashAtoms(unsigned int n_part, float3 hi, const float3 *x
   index[id] = id;
 }
 
+  /** Unit test for the GPU Domain Decomposition
+      ------------------------------------------
+      The testing strategy is as follows:
+      First the memory management is testet by changing the number of particles and
+      the cutoff/number of cells and see if this is handled correctly.
+      Then the function is testet by calculation the neighbor count of a know particle
+      configuration. This is also calculated via an nsquare algorithm to check its implementation. 
+      Then the neighbor count of a random system is compared between the calculation with domain decomposition and the nquared algorithm.
+  **/
+
+  /* Functions for unit testing */
+static bool test_memory_management();
+static bool test_neighbor_count();
+__global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, const uint2 *cells, const float3 *xyz, unsigned int *neighbors, float rcut2);
+__global__ static void nearestNeighbors_n2(unsigned int n_part, const float3 *xyz, unsigned int *neighbors, float rcut2);
+
+bool domain_decompositon_unit_test() {
+  bool result = true;
+
+  result &= test_memory_management();
+  result &= test_neighbor_count();
+
+  return result;
+}
+
 __device__ static inline float dist2(float3 a, float3 b) {
   return ( (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
 }
 
-__global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, const uint2 *cells, const float3 *xyz, unsigned int *neighbors, int range, float rcut2) {
+static bool test_memory_management() {
+  return false;
+}
+
+static bool test_neighbor_count() {
+  return false;
+}
+
+/* Count neighbors wihtin rcut2 of each particle _without_ periodic boundaries using a domain decomposition */
+
+__global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, const uint2 *cells, const float3 *xyz, unsigned int *neighbors, float rcut2) {
   unsigned int xindex = blockDim.x * blockIdx.x + threadIdx.x;
   unsigned int yindex = blockDim.y * blockIdx.y + threadIdx.y;
   unsigned int zindex = blockDim.z * blockIdx.z + threadIdx.z;
@@ -153,15 +200,15 @@ __global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, cons
   for(unsigned int id = cells[cellhash].x; id != cells[cellhash].y; id++) {
     m_neighbors = 0;
     float3 parti = xyz[id];
-    for(int i = -range; i <= range; i++) {
+    for(int i = -1; i <= 1; i++) {
       n = xindex + i;
       if((n < 0) || (n >= n_cells.x))
 	continue;
-      for(int j = -range; j <= range; j++) {
+      for(int j = -1; j <= 1; j++) {
 	m = yindex + j;
 	if((m < 0) || (m >= n_cells.y))
 	  continue;
-	for(int k = -range; k <= range; k++) {
+	for(int k = -1; k <= 1; k++) {
 	  l = zindex + k;
 	  if((l < 0) || (l >= n_cells.z))
 	    continue;
@@ -180,6 +227,8 @@ __global__ static void nearestNeighbors(unsigned int n_part, uint3 n_cells, cons
     neighbors[id] = m_neighbors;
   }
 }
+
+/* Count neighbors wihtin rcut2 of each particle _without_ periodic boundaries using a n2 loop */
 
 __global__ static void nearestNeighbors_n2(unsigned int n_part, const float3 *xyz, unsigned int *neighbors, float rcut2) {
   unsigned int id = blockIdx.x;

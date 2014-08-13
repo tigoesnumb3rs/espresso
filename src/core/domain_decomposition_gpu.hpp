@@ -10,10 +10,13 @@
 class DomainDecompositionGpu {
 public:
   DomainDecompositionGpu(float3 _box, unsigned int _n_part, uint3 _n_cells);
-  //  DomainDecompositionGpu(float3 _box, unsigned int _n_part, float cutoff);
+  DomainDecompositionGpu(float3 _box, unsigned int _n_part, float cutoff);
   ~DomainDecompositionGpu();
   void build(float3 *xyz);
   void set_n_part(unsigned int _n_part);
+  unsigned int get_n_part() { return n_part; };
+  uint3 get_n_cells() { return n_cells; };
+  void set_n_cells(uint3 _n_cells);
   //  void print() const;
 private:
   float3 hi;
@@ -29,5 +32,7 @@ private:
   void init_device_memory(bool particles, bool dd);
   void free_device_memory(bool particles, bool dd);
 };
+
+bool domain_decomposition_unit_test();
 
 #endif
