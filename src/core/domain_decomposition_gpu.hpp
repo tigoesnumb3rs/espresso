@@ -5,8 +5,6 @@
 
 #include "cuda_interface.hpp"
 
-#define GPU_DD_DEBUG
-
 #define CELL_EMPTY 0xffffffff
 
 class DomainDecompositionGpu {

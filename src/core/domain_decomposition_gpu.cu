@@ -315,21 +315,19 @@ static bool test_neighbor_count() {
   box.z = 30;
   cutoff = 1.5;
 
-  
-  /* This has the benefit of throwing an error if the number is wrong. */
   #define N_TEST_PART 11
 
   float3 parts_const[N_TEST_PART] = { {0.0f, 00.f, 0.0f }, // 1 
-		       {9.9f, 0.0f, 0.0f }, // 1
-		       {6.0f, 5.0f, 5.0f }, // 6
-		       {9.9f, 9.9f, 0.0f }, // 1
-		       {5.0f, 5.0f, 5.0f }, // 7
-		       {5.0f, 4.0f, 5.0f }, // 6
-		       {0.0f, 9.9f, 0.0f }, // 1 
-		       {5.0f, 5.0f, 4.0f }, // 6 
-		       {5.0f, 6.0f, 5.0f }, // 6
-		       {5.0f, 5.0f, 6.0f }, // 6
-		       {4.0f, 5.0f, 5.0f }  // 6 
+				      {9.9f, 0.0f, 0.0f }, // 1
+				      {6.0f, 5.0f, 5.0f }, // 6
+				      {9.9f, 9.9f, 0.0f }, // 1
+				      {5.0f, 5.0f, 5.0f }, // 7
+				      {5.0f, 4.0f, 5.0f }, // 6
+				      {0.0f, 9.9f, 0.0f }, // 1 
+				      {5.0f, 5.0f, 4.0f }, // 6 
+				      {5.0f, 6.0f, 5.0f }, // 6
+				      {5.0f, 5.0f, 6.0f }, // 6
+				      {4.0f, 5.0f, 5.0f }  // 6 
   };
 
   unsigned int correct_count[N_TEST_PART] = { 1, 1, 6, 1, 7, 6, 1, 6, 6, 6, 6 };
@@ -352,10 +350,6 @@ static bool test_neighbor_count() {
 
   /* Sort particles into cells */
   dd.build(parts_d);
-
-#ifdef GPU_DD_DEBUG
-  print_dd(dd);
-#endif
 
   /* Check result */
   if(!test_decomposition(dd))
@@ -415,8 +409,6 @@ static bool test_neighbor_count() {
   cuda_safe_mem(cudaMemcpy(parts_d, parts, n_part * sizeof(float3), cudaMemcpyHostToDevice));
 
   dd.build(parts_d);
-
-  print_dd(dd);
 
   /* Check result */
   if(!test_decomposition(dd))
