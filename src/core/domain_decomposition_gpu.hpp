@@ -5,6 +5,8 @@
 
 #include "cuda_interface.hpp"
 
+#define GPU_DD_DEBUG
+
 #define CELL_EMPTY 0xffffffff
 
 class DomainDecompositionGpu {
@@ -13,11 +15,19 @@ public:
   DomainDecompositionGpu(float3 _box, unsigned int _n_part, float cutoff);
   ~DomainDecompositionGpu();
   void build(float3 *xyz);
+  template<typename T>
+  void unsort(T *src, T *dst);  
   void set_n_part(unsigned int _n_part);
   unsigned int get_n_part() { return n_part; };
   uint3 get_n_cells() { return n_cells; };
   void set_n_cells(uint3 _n_cells);
-  //  void print() const;
+  /* These are ugly but have to do for now. */
+  uint2 *get_cells() { return cells; };
+  float3 *get_xyz_sorted() { return xyz_sorted; };
+  friend bool test_decomposition(DomainDecompositionGpu &dd);
+#ifdef GPU_DD_DEBUG
+  friend void print_dd(DomainDecompositionGpu &dd);
+#endif
 private:
   float3 hi;
   float3 box;
