@@ -201,7 +201,7 @@ include ./$(DEPDIR)/p3m_gpu_cuda.Plo
 include ./$(DEPDIR)/EspressoSystemInterface_cuda.Plo
 include ./actor/$(DEPDIR)/HarmonicWell_cuda.Plo
 include ./actor/$(DEPDIR)/Mmm1dgpuForce_cuda.Plo
-include ./$(DEPDIR)/domain_decomposition_gpu.cu
+include ./$(DEPDIR)/domain_decomposition_gpu.Plo
 
 LOFILES = $(CUDA_SOURCE_FILES:.cu=.lo)
 
