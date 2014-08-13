@@ -10,6 +10,14 @@
 #include "domain_decomposition_gpu.hpp"
 #include "cuda_utils.hpp"
 
+/* Forward declarations of gpu kernels. */
+
+__global__ static void sortParticlesGenerateCellist(unsigned int n_part, const float3 *xyz, float3 *xyz_sorted, unsigned int *hashes, unsigned int *indexes, uint2 *cells);
+
+__global__ static void hashAtoms(unsigned int n_part, float3 hi, const float3 *xyz, unsigned int *index, unsigned int *hashes, uint3 n_cells);
+
+/* Class Implementation */
+
 DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, uint3 _n_cells) {
 
   n_part = _n_part;
@@ -27,7 +35,7 @@ DomainDecompositionGpu::~DomainDecompositionGpu() {
   free_device_memory(true, true);
 }
 
-DomainDecompositionGpu::free_device_memory(bool particles, bool dd) {
+void DomainDecompositionGpu::free_device_memory(bool particles, bool dd) {
   if(particles) {
     cuda_safe_mem(cudaFree(indexes));
     cuda_safe_mem(cudaFree(hashes));
@@ -38,7 +46,7 @@ DomainDecompositionGpu::free_device_memory(bool particles, bool dd) {
   }
 }
 
-DomainDecompositionGpu::init_device_memory(bool particles, bool dd) {
+void DomainDecompositionGpu::init_device_memory(bool particles, bool dd) {
   if(particles) {
     cuda_safe_mem(cudaMalloc((void **)&(indexes), n_part*sizeof(unsigned int)));
     cuda_safe_mem(cudaMalloc((void **)&(hashes), n_part*sizeof(unsigned int)));
@@ -76,6 +84,8 @@ void DomainDecompositionGpu::set_n_part(unsigned int _n_part) {
   free_device_memory(true, false);
   init_device_memory(true, false);
 }
+
+/* GPU Kernels */
 
 __global__ static void sortParticlesGenerateCellist(unsigned int n_part, const float3 *xyz, float3 *xyz_sorted, unsigned int *hashes, unsigned int *indexes, uint2 *cells) {
   unsigned int id = blockDim.x*blockIdx.x + threadIdx.x;
