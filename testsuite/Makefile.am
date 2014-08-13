@@ -31,6 +31,7 @@ tests = \
 	constraints_rhomboid.tcl \
 	coulomb_cloud_wall.tcl \
 	dh.tcl \
+	domain_decomposition_gpu.tcl \
 	dielectric.tcl \
 	ek_eof_one_species_x.tcl \
 	ek_eof_one_species_y.tcl \
