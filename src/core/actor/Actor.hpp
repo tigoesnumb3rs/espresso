@@ -27,9 +27,9 @@
  */
 class Actor {
 public:
-	virtual void computeForces(SystemInterface &s) = 0;
+  virtual void computeForces(SystemInterface &s) = 0;
   virtual void computeEnergy(SystemInterface &s) = 0;
-	virtual ~Actor() {}
+  virtual ~Actor() {};
 };
 
 #endif /* _ACTOR_ACTOR_HPP */

@@ -37,15 +37,23 @@ DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part
   hi.z = n_cells.z/box.z;
   total_cells = n_cells.x*n_cells.y*n_cells.z;
 
+  box_set = cutoff_set = n_cells_set = n_part_set = true;
+  check_ready();
+
   init_device_memory(true, true);
 }
 
-DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, float cutoff) : n_part(_n_part), box(_box) {
-  update_cells_from_cutoff(cutoff);
-  init_device_memory(true, true);
+DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, float _cutoff) : n_part(_n_part), box(_box) {
+  cutoff = _cutoff;
+  update_cells_from_cutoff_and_box();
+
+  box_set = cutoff_set = cutoff_set = n_part_set = true;
+  check_ready();
+
+  init_device_memory(true, true);  
 }
 
-void DomainDecompositionGpu::update_cells_from_cutoff(float cutoff) {
+void DomainDecompositionGpu::update_cells_from_cutoff_and_box() {
   /* Need to take the floor to be on the safe side */
   n_cells.x = floor(box.x / cutoff);
   n_cells.y = floor(box.y / cutoff);
@@ -55,12 +63,29 @@ void DomainDecompositionGpu::update_cells_from_cutoff(float cutoff) {
   hi.x = n_cells.x/box.x;
   hi.y = n_cells.y/box.y;
   hi.z = n_cells.z/box.z;
+
+  n_cells_set = true;
+  check_ready();
 }
 
-void DomainDecompositionGpu::set_cutoff(float cutoff) {
-  update_cells_from_cutoff(cutoff);
-  free_device_memory(false,true);
-  init_device_memory(false,true);
+void DomainDecompositionGpu::set_box(float3 _box) {
+  if((box.x != _box.x) || (box.y != _box.y) || (box.z != _box.z)) {
+    box = _box;
+    box_set = true;
+    check_ready();
+    update_cells_from_cutoff_and_box();
+    realloc_device_memory(false,true);
+  }
+}
+
+void DomainDecompositionGpu::set_cutoff(float _cutoff) {
+  if(cutoff != _cutoff) {
+    cutoff = _cutoff;
+    cutoff_set = true;
+    check_ready();
+    update_cells_from_cutoff_and_box();    
+    realloc_device_memory(false,true);
+  }
 }
 
 DomainDecompositionGpu::~DomainDecompositionGpu() {
@@ -69,28 +94,49 @@ DomainDecompositionGpu::~DomainDecompositionGpu() {
 
 void DomainDecompositionGpu::free_device_memory(bool particles, bool dd) {
   if(particles) {
-    cuda_safe_mem(cudaFree(indexes));
-    cuda_safe_mem(cudaFree(hashes));
-    cuda_safe_mem(cudaFree(xyz_sorted));
+    if(indexes != 0)
+      cuda_safe_mem(cudaFree(indexes));
+    if(hashes != 0)
+      cuda_safe_mem(cudaFree(hashes));
+    if(xyz_sorted != 0)
+      cuda_safe_mem(cudaFree(xyz_sorted));
   }
   if(dd) {
-    cuda_safe_mem(cudaFree(cells));
+    if(cells != 0) {
+      cuda_safe_mem(cudaFree(cells));
+    }
   }
 }
 
 void DomainDecompositionGpu::init_device_memory(bool particles, bool dd) {
   if(particles) {
-    cuda_safe_mem(cudaMalloc((void **)&(indexes), n_part*sizeof(unsigned int)));
-    cuda_safe_mem(cudaMalloc((void **)&(hashes), n_part*sizeof(unsigned int)));
-    cuda_safe_mem(cudaMalloc((void **)&(xyz_sorted), n_part*sizeof(float3)));
+    if(n_part_set && (n_part != 0)) {
+      cuda_safe_mem(cudaMalloc((void **)&(indexes), n_part*sizeof(unsigned int)));
+      cuda_safe_mem(cudaMalloc((void **)&(hashes), n_part*sizeof(unsigned int)));
+      cuda_safe_mem(cudaMalloc((void **)&(xyz_sorted), n_part*sizeof(float3)));
+    } else {
+      indexes = 0;
+      hashes = 0;
+      xyz_sorted = 0;
+    }
   }
   if(dd) {
-    cuda_safe_mem(cudaMalloc((void **)&(cells), total_cells*sizeof(uint2)));
+    if(n_cells_set && (total_cells != 0)) {
+      cuda_safe_mem(cudaMalloc((void **)&(cells), total_cells*sizeof(uint2)));
+    } else {
+      cells = 0;
+    }
   }
 }
 
 void DomainDecompositionGpu::build(float3 *xyz) {
   dim3 block(1,1,1), grid(1,1,1);
+
+  if(!ready) {
+    std::cerr << "DomainDecompositionGpu::build(): Callend before all parameteres were set." << std::endl;
+    /* throw 128; ? */
+    return;
+  }
 
   if(n_part < 128) {
     block.x = n_part;
@@ -116,9 +162,11 @@ void DomainDecompositionGpu::build(float3 *xyz) {
 
 
 void DomainDecompositionGpu::set_n_part(unsigned int _n_part) {
-  n_part = _n_part;  
-  free_device_memory(true, false);
-  init_device_memory(true, false);
+  if(n_part != _n_part) {
+    n_part = _n_part;  
+    free_device_memory(true, false);
+    init_device_memory(true, false);
+  }
 }
 
 template<typename T>
@@ -521,12 +569,14 @@ __global__ static void nearestNeighbors_n2(unsigned int n_part, const float3 *xy
 }
 
 
-
+#ifdef GPU_DD_DEBUG
 void print_dd(DomainDecompositionGpu &dd) {
   puts("print_dd()");
   uint2 *cells_h;
   float3 *xyz_h;
   unsigned int count = 0;
+  
+
 
   cells_h = (uint2 *)malloc(dd.total_cells*sizeof(uint2));
   xyz_h = (float3 *)malloc(dd.n_part*sizeof(float3));
@@ -562,4 +612,4 @@ void print_dd(DomainDecompositionGpu &dd) {
     if(!part_map[i])
       printf("particle %d is missing.\n",i);
 }
-
+#endif
