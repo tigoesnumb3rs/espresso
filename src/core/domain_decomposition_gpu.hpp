@@ -1,18 +1,21 @@
-#ifndef __GPU_DD_HPP
+ #ifndef __GPU_DD_HPP
 #define __GPU_DD_HPP
 
 #include <cuda.h>
 
+#include "SystemInterface.hpp"
 #include "cuda_interface.hpp"
 
 #define CELL_EMPTY 0xffffffff
 
 class DomainDecompositionGpu {
 public:
-  DomainDecompositionGpu() : ready(false), n_part(0), cutoff(0.f), indexes(0), hashes(0), cells(0), xyz_sorted(0) {};
+  DomainDecompositionGpu() : ready(false), do_it(false), n_part(0), cutoff(0.f), indexes(0), hashes(0), cells(0), xyz_sorted(0) {};
+  DomainDecompositionGpu(SystemInterface &s, float _cutoff);
   DomainDecompositionGpu(float3 _box, unsigned int _n_part, float _cutoff);
   ~DomainDecompositionGpu();
   void build(float3 *xyz);
+  void enable() { do_it = true; };
   /* Get array in sorted order ...*/
   template<typename T>
   void sort(T *src, T *dst);
@@ -39,6 +42,7 @@ protected:
   void set_n_cells(uint3 _n_cells);
 private:
   bool ready, box_set, cutoff_set, n_part_set, n_cells_set;  
+  bool do_it;
   float3 hi;
   float3 box;
   unsigned int n_part;

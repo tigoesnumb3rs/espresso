@@ -16,6 +16,9 @@
 void print_dd(DomainDecompositionGpu &dd);
 #endif
 
+//#include "EspressoSystemInterface.hpp"
+// DomainDecompositionGpu domainDecompositionGpu(espressoSystemInterface, 1.0f);
+
 /* Forward declarations of gpu kernels. */
 
 __global__ static void sortParticlesGenerateCellist(unsigned int n_part, const float3 *xyz, float3 *xyz_sorted, unsigned int *hashes, unsigned int *indexes, uint2 *cells);
@@ -29,7 +32,22 @@ __global__ static void sortArrays(unsigned int *indexes, T *src, T *dst, unsigne
 
 /* Class Implementation */
 
-DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, uint3 _n_cells) : n_part(_n_part), box(_box) {
+DomainDecompositionGpu::DomainDecompositionGpu(SystemInterface &s, float _cutoff) : ready(false), do_it(false), cutoff(_cutoff) {
+  n_part = s.npart_gpu();
+  SystemInterface::Vector3 _box = s.box();
+  box.x = _box[0];
+  box.y = _box[1];
+  box.z = _box[2];
+
+  update_cells_from_cutoff_and_box();
+
+  box_set = cutoff_set = cutoff_set = n_part_set = true;
+  check_ready();
+
+  init_device_memory(true, true);  
+}
+
+DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, uint3 _n_cells) : do_it(false), n_part(_n_part), box(_box) {
 
   n_cells = _n_cells;
   hi.x = n_cells.x/box.x;
@@ -37,13 +55,14 @@ DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part
   hi.z = n_cells.z/box.z;
   total_cells = n_cells.x*n_cells.y*n_cells.z;
 
+  cutoff = 1. / hi.x;
   box_set = cutoff_set = n_cells_set = n_part_set = true;
   check_ready();
 
   init_device_memory(true, true);
 }
 
-DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, float _cutoff) : n_part(_n_part), box(_box) {
+DomainDecompositionGpu::DomainDecompositionGpu(float3 _box, unsigned int _n_part, float _cutoff) : do_it(false), n_part(_n_part), box(_box) {
   cutoff = _cutoff;
   update_cells_from_cutoff_and_box();
 
@@ -131,6 +150,9 @@ void DomainDecompositionGpu::init_device_memory(bool particles, bool dd) {
 
 void DomainDecompositionGpu::build(float3 *xyz) {
   dim3 block(1,1,1), grid(1,1,1);
+
+  if(!do_it)
+    return;
 
   if(!ready) {
     std::cerr << "DomainDecompositionGpu::build(): Callend before all parameteres were set." << std::endl;
