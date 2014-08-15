@@ -163,7 +163,8 @@ libEspresso_la_SOURCES += \
 	actor/ActorList.cpp actor/ActorList.hpp \
 	actor/HarmonicWell.cpp actor/HarmonicWell.hpp \
 	actor/Mmm1dgpuForce.cpp actor/Mmm1dgpuForce.hpp \
-	actor/mmm-common_cuda.hpp actor/specfunc_cuda.hpp
+	actor/mmm-common_cuda.hpp actor/specfunc_cuda.hpp \
+	actor/Ljgpu.hpp
 
 ##################################################
 # CUDA rules
@@ -179,7 +180,8 @@ CUDA_HEADER_FILES = \
 	cuda_init.hpp \
 	actor/mmm-common_cuda.hpp actor/specfunc_cuda.hpp \
 	electrokinetics.hpp \
-	domain_decomposition_gpu.hpp
+	domain_decomposition_gpu.hpp \
+	actor/Ljgpu.hpp
 
 CUDA_SOURCE_FILES = \
 	cuda_init_cuda.cu \
@@ -190,7 +192,8 @@ CUDA_SOURCE_FILES = \
 	EspressoSystemInterface_cuda.cu \
 	actor/Mmm1dgpuForce_cuda.cu \
 	actor/HarmonicWell_cuda.cu \
-	domain_decomposition_gpu.cu
+	domain_decomposition_gpu.cu \
+	actor/Ljgpu.cu
 
 # include the dependency tracking files
 include ./$(DEPDIR)/cuda_init_cuda.Plo
