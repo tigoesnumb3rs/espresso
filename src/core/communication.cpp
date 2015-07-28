@@ -289,8 +289,11 @@ void mpi_stop_slave(int node, int param)
   exit(0);
 }
 
-template<typename T>
+template<typename T, bool shallow_copy = false>
 void mpi_bcast_vector(std::vector<T> &v) {
+#ifdef HAVE_CXX11
+  static_assert(shallow_copy || std::is_pod<T>::value, "Can only send vectors of pod types this way.");
+#endif
   int size = v.size();
   MPI_Bcast( &size, 1, MPI_INT, 0, comm_cart);
   if(this_node != 0) {
@@ -2471,7 +2474,11 @@ int mpi_sync_topo_part_info() {
 }
 
 void mpi_sync_topo_part_info_slave(int node,int parm ) {
-  mpi_bcast_vector<Molecule>(topology);
+  /** Send the molecule structures */
+  mpi_bcast_vector<Molecule, true>(topology);
+  /** And the particle lists */
+  for(std::vector<Molecule>::iterator it = topology.begin(); it != topology.end(); ++it)
+    mpi_bcast_vector<int>(it->part);
   sync_topo_part_info();
 }
 
