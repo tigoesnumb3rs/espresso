@@ -210,7 +210,7 @@ int orient_order(double* result, double* stored_dirs)
    can calculate the orientational order. */
 
   for ( i = 0 ; i < topology.size() ; i++) {
-    atom = topology[i].part.e[0];
+    atom = topology[i].part[0];
     l_orient.e[i] = lipid_orientation(atom,partCfg,zref,dir,refdir);
     stored_dirs[i*3] = dir[0];
     stored_dirs[i*3+1] = dir[1];
@@ -302,12 +302,12 @@ int lipid_orientation( int id, Particle* partCfg , double zref, double director[
 
   /* Get basic molecule parameters */
   mol_id = partCfg[id].p.mol_id ;
-  mol_size = topology[mol_id].part.n;
+  mol_size = topology[mol_id].part.size();
  
   /* If the head and tail id's were not found above then assume the
      head atom is the first and tail is the last in the molecule */
-  head_id = topology[mol_id].part.e[0];
-  tail_id = topology[mol_id].part.e[mol_size -1];
+  head_id = topology[mol_id].part[0];
+  tail_id = topology[mol_id].part[mol_size -1];
 
   /* Check for stray lipids only if the system is a flat bilayer and the director is in the zdirection */
   if ( ( refdir[tmpxdir] == 0.0 ) && ( refdir[tmpydir] == 0 ) ) {
@@ -388,7 +388,7 @@ int get_lipid_orients(IntList* l_orient) {
   zref = calc_zref( zdir );
 
   for ( i = 0 ; i < topology.size() ; i++) {
-    atom = topology[i].part.e[0];
+    atom = topology[i].part[0];
     gi = floor( partCfg[atom].r.p[xdir]/grid_size[xdir] );
     gj = floor( partCfg[atom].r.p[ydir]/grid_size[ydir] );
     zreflocal = height_grid[gj+gi*mode_grid_3d[xdir]] + zref;
