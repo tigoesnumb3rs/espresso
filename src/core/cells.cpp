@@ -70,9 +70,8 @@ int rebuild_verletlist = 0;
 void check_cells_consistency()
 {
   int c, index;
-  IntList used;
-  alloc_intlist(&used, n_cells);
-  memset(used.e, 0, n_cells*sizeof(int));
+  std::vector<bool> used(n_cells);
+  std::fill(used.begin(), used.end(), false);
   
   for (c = 0; c < local_cells.n; c++) {
     index = (char *)local_cells.cell[c] - (char *)cells;
@@ -85,11 +84,11 @@ void check_cells_consistency()
       fprintf(stderr, "%d: local cell pointer out of range, maybe old leftover (local_cell[%d]).\n", this_node, c);
       errexit();
     }
-    if (used.e[index]) {
+    if (used[index]) {
       fprintf(stderr, "%d: local cell is already pointed to (local_cell[%d]).\n", this_node, c);
       errexit();
     }
-    used.e[index] = 1;
+    used[index] = true;
   }
 
   for (c = 0; c < ghost_cells.n; c++) {
@@ -103,18 +102,17 @@ void check_cells_consistency()
       fprintf(stderr, "%d: ghost cell pointer out of range, maybe old leftover (ghost_cell[%d]).\n", this_node, c);
       errexit();
     }
-    if (used.e[index]) {
+    if (used[index]) {
       fprintf(stderr, "%d: ghost cell is already pointed to (ghost_cell[%d]).\n", this_node, c);
       errexit();
     }
-    used.e[index] = 1;
+    used[index] = true;
   }
   for (c = 0; c < n_cells; c++)
-    if (!used.e[c]) {
+    if (!used[c]) {
       fprintf(stderr, "%d: cell %d is not used anywhere.\n", this_node, c);
       errexit();
     }
-  realloc_intlist(&used, 0);
 }
 
 /** Switch for choosing the topology release function of a certain
