@@ -129,13 +129,12 @@ int aggregation(double dist_criteria2, int min_contact, int s_mol_id, int f_mol_
   double dist2;
   int target1;
   int p1molid, p2molid;
-  int *contact_num, ind;
+  int ind;
+  std::vector<int> contact_num(0);
 
   if (min_contact > 1) {
-    contact_num = (int *) malloc(n_molecules*n_molecules *sizeof(int));
-    for (i = 0; i < n_molecules *n_molecules; i++) contact_num[i]=0;
-  } else {
-    contact_num = (int *) 0; /* Just to keep the compiler happy */
+    contact_num.resize(topology.size()*topology.size());
+    std::fill(contact_num.begin(), contact_num.end(), 0);
   }
 
   on_observable_calc();
@@ -168,8 +167,8 @@ int aggregation(double dist_criteria2, int min_contact, int s_mol_id, int f_mol_
 	    if (charge && (p1->p.q * p2->p.q >= 0)) {continue;}
 #endif
 	    if (dist2 < dist_criteria2) {
-	      if ( p1molid > p2molid ) { ind=p1molid*n_molecules + p2molid;} 
-	      else { ind=p2molid*n_molecules +p1molid;}
+	      if ( p1molid > p2molid ) { ind=p1molid*topology.size() + p2molid;} 
+	      else { ind=p2molid*topology.size() +p1molid;}
 	      if (min_contact > 1) {
 		contact_num[ind] ++;
 		if (contact_num[ind] >= min_contact) {

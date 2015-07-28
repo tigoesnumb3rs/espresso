@@ -334,14 +334,14 @@ void get_mol_dist_vector_from_molid_cfg(int mol_id1,int mol_id2,double dist[3]);
 double calc_pressure_mol(int type1,int type2){
   double force[3], com_dist[3],psum=0;
   int i,j,k,l,start;
-  for (i=0;i<n_molecules;i++){
+  for (i=0;i<topology.size();i++){
     if (topology[i].type == type1){
       if (type1==type2){
 	start=i+1;
       } else {
 	start=0;
       }
-      for (j=start;j<n_molecules;j++){
+      for (j=start;j<topology.size();j++){
 	for(l=0;l<3;l++)
 	  force[l]=0;
 	if (topology[j].type == type2){
@@ -386,7 +386,7 @@ double calc_energy_kinetic_mol(int type){
    double E_kin=0;
    int i;
    Particle *p_com;
-   for (i=0;i<n_molecules;i++){
+   for (i=0;i<topology.size();i++){
       if (topology[i].type == type){
          p_com=get_mol_com_particle_from_molid_cfg(i);
 #ifdef VIRTUAL_SITES_DEBUG
@@ -409,7 +409,7 @@ void calc_absolute_dipolmoment_mol(int type,double average_dipole[2]){
    int i,j,count=0;
    double dipole[4],tmp;
    average_dipole[0]=average_dipole[1]=0.0;
-   for (i=0;i<n_molecules;i++){
+   for (i=0;i<topology.size();i++){
       if (topology[i].type == type){
          count++;
          calc_dipole_of_molecule(i,dipole);
@@ -429,7 +429,7 @@ void calc_total_dipolmoment_mol(int type,double total_dipole[4]){
    int i,j;
    double dipole[4];
    total_dipole[0]=total_dipole[1]=total_dipole[2]=total_dipole[3]=0.0;
-   for (i=0;i<n_molecules;i++){
+   for (i=0;i<topology.size();i++){
       if (topology[i].type == type){
          calc_dipole_of_molecule(i,dipole);
          for (j=0;j<4;j++){

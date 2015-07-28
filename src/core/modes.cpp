@@ -177,7 +177,7 @@ int orient_order(double* result, double* stored_dirs)
 
   IntList l_orient;
   init_intlist(&l_orient);
-  realloc_intlist(&l_orient, n_molecules);
+  realloc_intlist(&l_orient, topology.size());
 
   bilayer_cnt = 0;
   *result = 0;
@@ -209,7 +209,7 @@ int orient_order(double* result, double* stored_dirs)
    direction of the bilayer .. ie the reference vector from which we
    can calculate the orientational order. */
 
-  for ( i = 0 ; i < n_molecules ; i++) {
+  for ( i = 0 ; i < topology.size() ; i++) {
     atom = topology[i].part.e[0];
     l_orient.e[i] = lipid_orientation(atom,partCfg,zref,dir,refdir);
     stored_dirs[i*3] = dir[0];
@@ -241,7 +241,7 @@ int orient_order(double* result, double* stored_dirs)
   }
 
   /* Calculate the orientational order */
-  for ( i = 0 ; i < n_molecules ; i++ ) {
+  for ( i = 0 ; i < topology.size() ; i++ ) {
     dir[0] = stored_dirs[i*3];
     dir[1] = stored_dirs[i*3+1];
     dir[2] = stored_dirs[i*3+2];
@@ -298,7 +298,7 @@ int lipid_orientation( int id, Particle* partCfg , double zref, double director[
 
 
   /* check molecule information exists */
-  if ( n_molecules < 0 ) return ES_ERROR;
+  if ( topology.size() < 0 ) return ES_ERROR;
 
   /* Get basic molecule parameters */
   mol_id = partCfg[id].p.mol_id ;
@@ -387,7 +387,7 @@ int get_lipid_orients(IntList* l_orient) {
 
   zref = calc_zref( zdir );
 
-  for ( i = 0 ; i < n_molecules ; i++) {
+  for ( i = 0 ; i < topology.size() ; i++) {
     atom = topology[i].part.e[0];
     gi = floor( partCfg[atom].r.p[xdir]/grid_size[xdir] );
     gj = floor( partCfg[atom].r.p[ydir]/grid_size[ydir] );

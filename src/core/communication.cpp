@@ -289,6 +289,16 @@ void mpi_stop_slave(int node, int param)
   exit(0);
 }
 
+template<typename T>
+void mpi_bcast_vector(std::vector<T> &v) {
+  int size = v.size();
+  MPI_Bcast( &size, 1, MPI_INT, 0, comm_cart);
+  if(this_node != 0) {
+    v.resize(size);
+  }
+  MPI_Bcast( &(*(v.begin())), size*sizeof(T), MPI_CHAR, 0, comm_cart);
+}
+
 /*************** REQ_BCAST_PAR ************/
 static void common_bcast_parameter(int i)
 {
@@ -2453,86 +2463,16 @@ void mpi_update_mol_ids_slave(int node,int parm)
 
 /******************* REQ_SYNC_TOPO ********************/
 int mpi_sync_topo_part_info() {
-  int i;
-  int molsize=0;
-  int moltype=0;
-  int n_mols=0;
-  
   mpi_call(mpi_sync_topo_part_info_slave,-1,0);
-  n_mols = n_molecules;
-  MPI_Bcast(&n_mols,1,MPI_INT,0,comm_cart);
 
-  for ( i = 0 ; i < n_molecules ; i++) {
-    molsize = topology[i].part.n;
-    moltype = topology[i].type;
-
-#ifdef MOLFORCES
-    MPI_Bcast(&(topology[i].trap_flag),1,MPI_INT,0,comm_cart);
-    MPI_Bcast(topology[i].trap_center,3,MPI_DOUBLE,0,comm_cart);
-    MPI_Bcast(&(topology[i].trap_spring_constant),1,MPI_DOUBLE,0,comm_cart);
-    MPI_Bcast(&(topology[i].drag_constant),1,MPI_DOUBLE,0,comm_cart);
-    MPI_Bcast(&(topology[i].noforce_flag),1,MPI_INT,0,comm_cart);
-    MPI_Bcast(&(topology[i].isrelative),1,MPI_INT,0,comm_cart);
-    MPI_Bcast(&(topology[i].favcounter),1,MPI_INT,0,comm_cart);
-    if (topology[i].favcounter == -1)
-      MPI_Bcast(topology[i].fav,3,MPI_DOUBLE,0,comm_cart);
-    /* check if any molecules are trapped */
-    if  ((topology[i].trap_flag != 32) && (topology[i].noforce_flag != 32)) {
-      IsTrapped = 1;
-    }
-#endif
-
-    MPI_Bcast(&molsize,1,MPI_INT,0,comm_cart);
-    MPI_Bcast(&moltype,1,MPI_INT,0,comm_cart);
-    MPI_Bcast(topology[i].part.e,topology[i].part.n,MPI_INT,0,comm_cart);
-    MPI_Bcast(&topology[i].type,1,MPI_INT,0,comm_cart);
-    
-  }
-  
-  sync_topo_part_info();
+  mpi_sync_topo_part_info_slave(-1, 0);
 
   return 1;
 }
 
 void mpi_sync_topo_part_info_slave(int node,int parm ) {
-  int i;
-  int molsize=0;
-  int moltype=0;
-  int n_mols=0;
-
-  MPI_Bcast(&n_mols,1,MPI_INT,0,comm_cart);
-  realloc_topology(n_mols);
-  for ( i = 0 ; i < n_molecules ; i++) {
-
-#ifdef MOLFORCES
-    MPI_Bcast(&(topology[i].trap_flag),1,MPI_INT,0,comm_cart);
-    MPI_Bcast(topology[i].trap_center,3,MPI_DOUBLE,0,comm_cart);
-    MPI_Bcast(&(topology[i].trap_spring_constant),1,MPI_DOUBLE,0,comm_cart);
-    MPI_Bcast(&(topology[i].drag_constant),1,MPI_DOUBLE,0,comm_cart);
-    MPI_Bcast(&(topology[i].noforce_flag),1,MPI_INT,0,comm_cart);
-    MPI_Bcast(&(topology[i].isrelative),1,MPI_INT,0,comm_cart);
-    MPI_Bcast(&(topology[i].favcounter),1,MPI_INT,0,comm_cart);
-    if (topology[i].favcounter == -1)
-      MPI_Bcast(topology[i].fav,3,MPI_DOUBLE,0,comm_cart);
-    /* check if any molecules are trapped */
-    if  ((topology[i].trap_flag != 32) && (topology[i].noforce_flag != 32)) {
-      IsTrapped = 1;
-    }
-#endif
-
-    MPI_Bcast(&molsize,1,MPI_INT,0,comm_cart);
-    MPI_Bcast(&moltype,1,MPI_INT,0,comm_cart);
-    topology[i].type = moltype;
-    realloc_intlist(&topology[i].part,topology[i].part.n = molsize);
-
-    MPI_Bcast(topology[i].part.e,topology[i].part.n,MPI_INT,0,comm_cart);
-    MPI_Bcast(&topology[i].type,1,MPI_INT,0,comm_cart);
-
-  }
-  
-
+  mpi_bcast_vector<Molecule>(topology);
   sync_topo_part_info();
-
 }
 
 /******************* REQ_BCAST_LBPAR ********************/

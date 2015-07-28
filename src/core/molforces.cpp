@@ -85,11 +85,7 @@ void calc_trap_force()
       runtimeError(msg);
     return;
   } else {
-    
-    m = &topology[0];
-    
-    for (mi = 0; mi < n_molecules; mi++) {
-      m = &topology[mi];
+    for(std::vector<Molecule>::iterator m = topology.begin(); m != topology.end(); ++m) {
       for(j = 0; j < 3; j++) {
 #ifdef EXTERNAL_FORCES
 	if (m->trap_flag & COORD_FIXED(j)) {
@@ -103,9 +99,9 @@ void calc_trap_force()
 	  }
 	  m->trap_force[j] = 0;
 	  /* the trap_force holding the molecule to the set position in calculated */
-	  m->trap_force[j] += -((m->com[j]-trappos)*m->trap_spring_constant)/(double)(m->part.n);
+	  m->trap_force[j] += -((m->com[j]-trappos)*m->trap_spring_constant)/(double)(m->part.size());
 	  /* the drag force applied to the molecule is calculated */
-	  m->trap_force[j] += -(m->v[j]*m->drag_constant)/(double)(m->part.n);
+	  m->trap_force[j] += -(m->v[j]*m->drag_constant)/(double)(m->part.size());
 	  /* the force applies by the traps is added to fav */
 	  /* favcounter counts how many times we have added the force to fav since last time "analyze mol force" was called */
 	  /* upon Espresso initialization it is set to -1 because in the first call of "integrate" there is an extra initial time step */
@@ -114,7 +110,7 @@ void calc_trap_force()
 	}
 	if (m->noforce_flag & COORD_FIXED(j)) {
 	  /* the trap force required to cancel out the total force acting on the molecule is calculated */
-	  m->trap_force[j] -= m->f[j]/(double)m->part.n;
+	  m->trap_force[j] -= m->f[j]/(double)m->part.size();
 	  if (m->favcounter > -1) m->fav[j] -= m->f[j];
 	}
 #endif
@@ -124,6 +120,7 @@ void calc_trap_force()
   }
 }
 
+
 /* A list of trapped molecules present on this node is created (local_trapped_mols)*/
 void get_local_trapped_mols (IntList *local_trapped_mols)
 {
@@ -132,7 +129,7 @@ void get_local_trapped_mols (IntList *local_trapped_mols)
   for (c = 0; c < local_cells.n; c++) {
     for(i = 0; i < local_cells.cell[c]->n; i++) {
       mol = local_cells.cell[c]->part[i].p.mol_id;
-      if ( mol >= n_molecules ) {
+      if ( mol >= topology.size() ) {
       ostringstream msg;
       msg <<"can't calculate molforces no such molecule as " << mol ;
       runtimeError(msg);
@@ -171,7 +168,7 @@ void calc_local_mol_info (IntList *local_trapped_mols)
   int fixed;
 
   /* First reset all molecule masses,forces,centers of mass*/
-  for ( mi = 0 ; mi < n_molecules ; mi++ ) {
+  for ( mi = 0 ; mi < topology.size(); mi++ ) {
     topology[mi].mass = 0;
     for ( i = 0 ; i < 3 ; i++) {
       topology[mi].f[i] = 0.0;
@@ -186,7 +183,7 @@ void calc_local_mol_info (IntList *local_trapped_mols)
     np = cell->n;
     for(i = 0; i < np; i++) {
       mol = p[i].p.mol_id;
-      if ( mol >= n_molecules ) {
+      if ( mol >= topology.size() ) {
       ostringstream msg;
       msg <<"can't calculate molforces no such molecule as " << mol;
       runtimeError(msg);
@@ -269,7 +266,7 @@ void mpi_comm_mol_info(IntList *local_trapped_mols) {
   /* Initialise the centre of masses, velocities and forces to 0
      except for molecules present on master node which are initialized to the local values on the master node
      The centre of masses and velocities are weighted by the total mass on the master node */
-  for (i = 0; i < n_molecules; i++) {
+  for (i = 0; i < topology.size(); i++) {
     mol =i;
     if (intlist_contains(local_trapped_mols,i)) {
       for (j = 0; j < 3; j++) {
@@ -308,7 +305,7 @@ void mpi_comm_mol_info(IntList *local_trapped_mols) {
   }
 
   /* The centre of masses and velocities are renormalized by the total molecular weights */
-  for (mol = 0; mol < n_molecules; mol++) {
+  for (mol = 0; mol < topology.size(); mol++) {
     for (k=0;k <3; k ++) {
       topology[mol].com[k] = topology[mol].com[k]/topology[mol].mass;
       topology[mol].v[k] = topology[mol].v[k]/topology[mol].mass;

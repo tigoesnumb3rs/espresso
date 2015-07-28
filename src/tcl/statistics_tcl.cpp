@@ -304,12 +304,12 @@ static int tclcommand_analyze_parse_get_lipid_orients(Tcl_Interp *interp, int ar
         return (TCL_ERROR);
     }
 
-    realloc_intlist(&l_orient, n_molecules);
+    realloc_intlist(&l_orient, topology.size());
     get_lipid_orients(&l_orient);
 
 
     Tcl_AppendResult(interp, "{ Lipid_orientations } { ", (char *) NULL);
-    for (i = 0; i < n_molecules; i++) {
+    for (i = 0; i < topology.size(); i++) {
         sprintf(buffer, "%d ", l_orient.e[i]);
         Tcl_AppendResult(interp, buffer, (char *) NULL);
     }
@@ -883,7 +883,7 @@ static int tclcommand_analyze_parse_lipid_orient_order(Tcl_Interp *interp, int a
         return (TCL_OK);
     }
 
-    stored_dirs = (double*) malloc(sizeof (double)*n_molecules * 3);
+    stored_dirs = (double*) malloc(sizeof (double)*topology.size() * 3);
     /* Do the calculation */
     if (orient_order(&result, stored_dirs) != TCL_OK) {
         Tcl_AppendResult(interp, "Error calculating orientational order ", (char *) NULL);
@@ -902,7 +902,7 @@ static int tclcommand_analyze_parse_lipid_orient_order(Tcl_Interp *interp, int a
             Tcl_PrintDouble(interp, result, buffer);
             Tcl_AppendResult(interp, buffer, (char *) NULL);
             Tcl_AppendResult(interp, " { ", (char *) NULL);
-            for (i = 0; i < n_molecules; i++) {
+            for (i = 0; i < topology.size(); i++) {
                 Tcl_AppendResult(interp, " { ", (char *) NULL);
                 for (j = 0; j < 3; j++) {
                     Tcl_PrintDouble(interp, stored_dirs[i * 3 + j], buffer);
@@ -930,14 +930,14 @@ static int tclcommand_analyze_parse_aggregation(Tcl_Interp *interp, int argc, ch
     int *agg_id_list;
     double dist_criteria, dist_criteria2;
     int charge_criteria, min_contact, *head_list, *link_list;
-    int agg_num = 0, *agg_size, agg_min = n_molecules, agg_max = 0, agg_std = 0, agg_avg = 0;
+    int agg_num = 0, *agg_size, agg_min = topology.size(), agg_max = 0, agg_std = 0, agg_avg = 0;
     float fagg_avg;
     int s_mol_id, f_mol_id;
 
-    agg_id_list = (int *) malloc(n_molecules * sizeof (int));
-    head_list = (int *) malloc(n_molecules * sizeof (int));
-    link_list = (int *) malloc(n_molecules * sizeof (int));
-    agg_size = (int *) malloc(n_molecules * sizeof (int));
+    agg_id_list = (int *) malloc(topology.size() * sizeof (int));
+    head_list = (int *) malloc(topology.size() * sizeof (int));
+    link_list = (int *) malloc(topology.size() * sizeof (int));
+    agg_size = (int *) malloc(topology.size() * sizeof (int));
 
     /* parse arguments */
     if (argc < 3) {
@@ -973,7 +973,7 @@ static int tclcommand_analyze_parse_aggregation(Tcl_Interp *interp, int argc, ch
         return TCL_ERROR;
     }
 
-    if ((s_mol_id < 0) || (s_mol_id > n_molecules) || (f_mol_id < 0) || (f_mol_id > n_molecules)) {
+    if ((s_mol_id < 0) || (s_mol_id > topology.size()) || (f_mol_id < 0) || (f_mol_id > topology.size())) {
         Tcl_AppendResult(interp, "check your start and finish molecule id's", (char *) NULL);
         return TCL_ERROR;
     }
@@ -2400,7 +2400,7 @@ static int tclcommand_analyze_parse_mol(Tcl_Interp *interp, int argc, char **arg
         if (!ARG0_IS_I(mol)) return (TCL_ERROR);
         argc--;
         argv++;
-        if (mol > n_molecules) return (TCL_ERROR);
+        if (mol > topology.size()) return (TCL_ERROR);
         sprintf(buffer, "%e %e %e %d", topology[mol].fav[0], topology[mol].fav[1], topology[mol].fav[2], topology[mol].favcounter);
         for (i = 0; i < 3; i++) {
             topology[mol].fav[i] = 0;
@@ -2418,7 +2418,7 @@ static int tclcommand_analyze_parse_mol(Tcl_Interp *interp, int argc, char **arg
         if (!ARG0_IS_I(mol)) return (TCL_ERROR);
         argc--;
         argv++;
-        if (mol > n_molecules) return (TCL_ERROR);
+        if (mol > topology.size()) return (TCL_ERROR);
         sprintf(buffer, "%e %e %e", topology[mol].com[0], topology[mol].com[1], topology[mol].com[2]);
         Tcl_AppendResult(interp, buffer, (char *) NULL);
         return TCL_OK;

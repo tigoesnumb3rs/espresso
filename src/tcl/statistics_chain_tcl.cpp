@@ -47,11 +47,10 @@ int tclcommand_analyze_set_parse_chain_topology(Tcl_Interp *interp, int argc, ch
 
   realloc_topology(chain_n_chains);
   pc = 0;
-  for (m = 0; m < n_molecules; m++) {
-    topology[m].type = 0;
-    realloc_intlist(&topology[m].part, topology[m].part.n = chain_length);
+  for (m = 0; m < topology.size(); m++) {
+    topology[m].part.resize(chain_length);
     for (i = 0; i < chain_length; i++)
-      topology[m].part.e[i] = pc++;
+      topology[m].part[i] = pc++;
   }
  
   return TCL_OK;

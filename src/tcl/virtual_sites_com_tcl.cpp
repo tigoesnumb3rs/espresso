@@ -66,7 +66,7 @@ int tclcommand_analyze_parse_and_print_pressure_mol(Tcl_Interp *interp,int argc,
    }
    argc-=2; argv+=2;
 
-   if (n_molecules==0) {
+   if (topology.size()==0) {
       Tcl_ResetResult(interp);
       Tcl_AppendResult(interp, "No molecules defined !", (char *)NULL);
       return (TCL_ERROR);
@@ -106,7 +106,7 @@ int tclcommand_analyze_parse_and_print_energy_kinetic_mol(Tcl_Interp *interp,int
    }
    argc-=1; argv+=1;
 
-   if (n_molecules==0) {
+   if (topology.size()==0) {
       Tcl_ResetResult(interp);
       Tcl_AppendResult(interp, "No molecules defined !", (char *)NULL);
       return (TCL_ERROR);
@@ -142,7 +142,7 @@ int tclcommand_analyze_parse_and_print_dipmom_mol(Tcl_Interp *interp,int argc, c
        runtimeError(msg);
       return TCL_ERROR;
    }
-   if (n_molecules==0) {
+   if (topology.size()==0) {
       Tcl_ResetResult(interp);
       Tcl_AppendResult(interp, "No molecules defined !", (char *)NULL);
       return (TCL_ERROR);

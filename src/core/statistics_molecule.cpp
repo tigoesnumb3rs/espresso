@@ -40,9 +40,6 @@ int analyze_fold_molecules(float *coord, double shift[3])
   }
   #endif
   
-  /* check molecule information */
-  if ( n_molecules < 0 ) return ES_ERROR;
-
   if (!sortPartCfg()) {
       ostringstream msg;
       msg <<"analyze_fold_molecules: could not sort particle config, particle ids not consecutive?";
@@ -51,8 +48,8 @@ int analyze_fold_molecules(float *coord, double shift[3])
   }
 
   /* loop molecules */
-  for(m=0; m<n_molecules; m++) {
-    mol_size = topology[m].part.n;
+  for(m=0; m< topology.size(); m++) {
+    mol_size = topology[m].part.size();
     if(mol_size > 0) {
       /* calc center of mass */
       calc_mol_center_of_mass(topology[m],com);
@@ -62,7 +59,7 @@ int analyze_fold_molecules(float *coord, double shift[3])
 	  tmp = (int)floor((com[i]+shift[i])*box_l_i[i]);
 	  cm_tmp =0.0;
 	  for(p=0; p<mol_size; p++) {
-	    ind        = 3*topology[m].part.e[p] + i;
+	    ind        = 3*topology[m].part[p] + i;
 	    coord[ind] -= tmp*box_l[i];
 	    coord[ind] += shift[i];
 	    cm_tmp     += coord[ind];
@@ -89,15 +86,15 @@ double calc_mol_hydro_radius(Molecule mol)
   int i, j, id1, id2;
   double rh=0.0, diff_vec[3];
 
-  for(i=0; i<mol.part.n; i++) {
-    id1 = mol.part.e[i];
-    for(j=i+1; j<mol.part.n; j++) {
-      id2 = mol.part.e[i];
+  for(i=0; i<mol.part.size(); i++) {
+    id1 = mol.part[i];
+    for(j=i+1; j<mol.part.size(); j++) {
+      id2 = mol.part[i];
       vecsub(partCfg[id1].r.p, partCfg[id2].r.p, diff_vec);
       rh += 1.0/sqrt(sqrlen(diff_vec));
     }
   }
-  return 0.5*(mol.part.n*(mol.part.n-1))/rh;
+  return 0.5*(mol.part.size()*(mol.part.size()-1))/rh;
 }
 
 
@@ -108,8 +105,8 @@ void calc_mol_center_of_mass(Molecule mol, double com[3])
   double M = 0.0;
   for(j=0; j<3; j++) com[j]=0.0;
 
-  for(i=0; i<mol.part.n; i++) {
-    id = mol.part.e[i];
+  for(i=0; i<mol.part.size(); i++) {
+    id = mol.part[i];
     for(j=0; j<3; j++) com[j]+= partCfg[id].r.p[j]*PMASS(partCfg[id]);
     M += PMASS(partCfg[id]);
   }
@@ -125,8 +122,8 @@ double calc_mol_gyr_radius2(Molecule mol)
 
   calc_mol_center_of_mass(mol, com);
 
-  for(i=0; i<mol.part.n; i++) {
-    id = mol.part.e[i];
+  for(i=0; i<mol.part.size(); i++) {
+    id = mol.part[i];
     vecsub(partCfg[id].r.p, com, diff_vec);
     rg += sqrlen(diff_vec);
     M += PMASS(partCfg[id]);

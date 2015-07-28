@@ -34,11 +34,26 @@
 /*@{*/
 
 /** Structure holding information about a molecule */
-typedef struct {
+struct Molecule {
+  Molecule() {
+    type = 0;
+#ifdef MOLFORCES
+    trap_flag = 32; 
+    noforce_flag = 32;
+    favcounter = -1;
+    fav[0] = 0;
+    fav[1] = 0;
+    fav[2] = 0;
+    trap_force[0] = 0;
+    trap_force[1] = 0;
+    trap_force[2] = 0;
+#endif
+  }
+
   /** Type of the molecule */
   int type;
   /** List of particle identities contained in that molecule */
-  IntList part;
+  std::vector<int> part;
 
 #ifdef MOLFORCES
   /** Total force on the molecule */
@@ -69,7 +84,7 @@ typedef struct {
   double trap_force[3];
 #endif
 
-} Molecule;
+};
 
 /*@}*/
 
@@ -78,10 +93,8 @@ typedef struct {
 /************************************************************/
 /*@{*/
 
-/** Number of molecules in the system */
-extern int     n_molecules;
 /** List of molecules. */
-extern Molecule *topology;
+extern std::vector<Molecule> topology;
 
 extern int topo_part_info_synced;
 

@@ -34,67 +34,37 @@
 #include "communication.hpp"
 #include "molforces.hpp"
 
-int     n_molecules = -1;
-Molecule *topology = NULL;
+std::vector<Molecule> topology(0);
 int topo_part_info_synced = 0;
 
 void realloc_topology(int size)
 {
-  int m;
-
-  for(m = size ; m < n_molecules; m++) {
-    realloc_intlist(&topology[m].part, 0);
-  }
-  
-  topology = (Molecule*)realloc(topology, size*sizeof(Molecule));
-
-  if (n_molecules < 0)
-    n_molecules = 0;
-  for(m = n_molecules; m < size; m++) {
-    init_intlist(&topology[m].part);
-#ifdef MOLFORCES
-    topology[m].trap_flag = 32; 
-    topology[m].noforce_flag = 32;
-    topology[m].favcounter = -1;
-    topology[m].fav[0] = 0;
-    topology[m].fav[1] = 0;
-    topology[m].fav[2] = 0;
-    topology[m].trap_force[0] = 0;
-    topology[m].trap_force[1] = 0;
-    topology[m].trap_force[2] = 0;
-#endif /*MOLFORCES*/
-  }
-  n_molecules = size;
-  
+  topology.resize(size);
   topo_part_info_synced = 0;
-
 }
 
 // Parallel function for synchronising topology and particle data
 void sync_topo_part_info() {
   int i,j;
   Particle* p;
-  for ( i = 0 ; i < n_molecules ; i ++ ) {
-    for ( j = 0 ; j < topology[i].part.n ; j++ ) {
-      p = local_particles[topology[i].part.e[j]];
-      if(!p) { 
-	/* Do nothing */ 
+  for ( i = 0 ; i < topology.size(); i ++ ) {
+    for ( j = 0 ; j < topology[i].part.size(); j++ ) {
+      p = local_particles[topology[i].part[j]];
+      if(!p) {
+        p->p.mol_id = i;
       } 
-      else {
-	p->p.mol_id = i;
-      }
+    
     }
   }
 
   topo_part_info_synced = 1;
-
 }
 
 
 int set_molecule_trap(int mol_num, int trap_flag,DoubleList *trap_center,double spring_constant, double drag_constant, int noforce_flag, int isrelative) {
 #ifdef MOLFORCES
   int i;
-  if ( mol_num < n_molecules ) {
+  if ( mol_num < topology.size()) {
 #ifdef EXTERNAL_FORCES
     topology[mol_num].trap_flag &= ~COORDS_FIX_MASK;
     topology[mol_num].noforce_flag &= ~COORDS_FIX_MASK;
