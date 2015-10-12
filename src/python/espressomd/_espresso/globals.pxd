@@ -41,7 +41,7 @@ cdef extern from "integrate.hpp":
 cdef extern from "verlet.hpp":
     double skin
 
-cdef extern from "lattice.hpp":
+cdef extern from "Lattice.hpp":
     extern int lattice_switch
 
 cdef extern from "domain_decomposition.hpp":

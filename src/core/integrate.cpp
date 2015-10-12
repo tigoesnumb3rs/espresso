@@ -55,7 +55,6 @@
 #include "nemd.hpp"
 #include "rattle.hpp"
 #include "errorhandling.hpp"
-#include "lattice.hpp"
 #include "lb.hpp"
 #include "virtual_sites.hpp"
 #include "statistics_correlation.hpp"

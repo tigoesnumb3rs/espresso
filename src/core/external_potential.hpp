@@ -19,7 +19,7 @@
 #ifndef _EXTERNAL_POTENTIAL_HPP
 #define _EXTERNAL_POTENTIAL_HPP
 
-#include "lattice.hpp"
+#include "Lattice.hpp"
 
 #define MAX_FILENAME_SIZE 256
 

@@ -30,7 +30,7 @@
 
 #include <mpi.h>
 #include "utils.hpp"
-#include "lattice.hpp"
+#include "Lattice.hpp"
 
 #ifdef LATTICE
 

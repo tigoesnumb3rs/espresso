@@ -16,6 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
+
+#ifndef __UTILS_VECTOR_HPP
+#define __UTILS_VECTOR_HPP
+
 #include <algorithm>
 #include <cmath>
 
@@ -93,3 +97,4 @@ public:
 typedef Vector<3, double> Vector3d;
 typedef Vector<3, int> Vector3i;
 
+#endif

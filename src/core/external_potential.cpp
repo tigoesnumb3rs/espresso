@@ -17,7 +17,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "external_potential.hpp"
-#include "lattice.hpp"
 #include "communication.hpp"
 #include "integrate.hpp"
 

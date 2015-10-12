@@ -24,7 +24,7 @@
  *
  */
 
-#include "lattice_inline.hpp"
+#include "Lattice.hpp"
 
 int lattice_switch = LATTICE_OFF ;
 

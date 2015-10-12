@@ -27,7 +27,6 @@
 
 #include "utils.hpp"
 #include "grid.hpp"
-#include "lattice.hpp"
 #include "halo.hpp"
 
 #ifdef LATTICE

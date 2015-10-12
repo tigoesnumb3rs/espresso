@@ -53,7 +53,6 @@
 #include "domain_decomposition.hpp"
 #include "errorhandling.hpp"
 #include "rattle.hpp"
-#include "lattice.hpp"
 #include "iccp3m.hpp" /* -iccp3m- */
 #include "metadynamics.hpp"
 #include "statistics_observable.hpp"

@@ -25,7 +25,6 @@
 #include "utils.hpp"
 
 #include "communication.hpp"
-#include "lattice.hpp"
 #include "npt.hpp"
 #include "ghmc.hpp"
 
