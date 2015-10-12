@@ -91,4 +91,5 @@ public:
 };
 
 typedef Vector<3, double> Vector3d;
+typedef Vector<3, int> Vector3i;
 
