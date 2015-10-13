@@ -2352,14 +2352,9 @@ inline void lb_relax_modes(index_t index, double *mode)
     /* if forces are present, the momentum density is redefined to
      * include one half-step of the force action.  See the
      * Chapman-Enskog expansion in [Ladd & Verberg]. */
-#ifndef EXTERNAL_FORCES
-    if (lbfields[index].has_force)
-#endif // !EXTERNAL_FORCES
-    {
-        j[0] += 0.5 * lbfields[index].force[0];
-        j[1] += 0.5 * lbfields[index].force[1];
-        j[2] += 0.5 * lbfields[index].force[2];
-    }
+    j[0] += 0.5 * lbfields[index].force[0];
+    j[1] += 0.5 * lbfields[index].force[1];
+    j[2] += 0.5 * lbfields[index].force[2];
 
     /* equilibrium part of the stress modes */
     pi_eq[0] = scalar(j,j) / rho;
@@ -2377,7 +2372,6 @@ inline void lb_relax_modes(index_t index, double *mode)
     mode[8] = pi_eq[4] + gamma_shear * (mode[8] - pi_eq[4]);
     mode[9] = pi_eq[5] + gamma_shear * (mode[9] - pi_eq[5]);
 
-#ifndef OLD_FLUCT
     /* relax the ghost modes (project them out) */
     /* ghost modes have no equilibrium part due to orthogonality */
     mode[10] = gamma_odd*mode[10];
@@ -2389,7 +2383,6 @@ inline void lb_relax_modes(index_t index, double *mode)
     mode[16] = gamma_even*mode[16];
     mode[17] = gamma_even*mode[17];
     mode[18] = gamma_even*mode[18];
-#endif // !OLD_FLUCT
 }
 
 
@@ -2406,7 +2399,6 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
     mode[8] += (fluct[4] = rootrho_gauss*lb_phi[8]*gaussian_random());
     mode[9] += (fluct[5] = rootrho_gauss*lb_phi[9]*gaussian_random());
 
-#ifndef OLD_FLUCT
     /* ghost modes */
     mode[10] += rootrho_gauss*lb_phi[10]*gaussian_random();
     mode[11] += rootrho_gauss*lb_phi[11]*gaussian_random();
@@ -2417,7 +2409,6 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
     mode[16] += rootrho_gauss*lb_phi[16]*gaussian_random();
     mode[17] += rootrho_gauss*lb_phi[17]*gaussian_random();
     mode[18] += rootrho_gauss*lb_phi[18]*gaussian_random();
-#endif // !OLD_FLUCT
 
 #elif defined (GAUSSRANDOMCUT)
     double rootrho_gauss = sqrt(fabs(mode[0]+lbpar.rho[0]*lbpar.agrid*lbpar.agrid*lbpar.agrid));
@@ -2430,7 +2421,6 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
     mode[8] += (fluct[4] = rootrho_gauss*lb_phi[8]*gaussian_random_cut());
     mode[9] += (fluct[5] = rootrho_gauss*lb_phi[9]*gaussian_random_cut());
 
-#ifndef OLD_FLUCT
     /* ghost modes */
     mode[10] += rootrho_gauss*lb_phi[10]*gaussian_random_cut();
     mode[11] += rootrho_gauss*lb_phi[11]*gaussian_random_cut();
@@ -2441,7 +2431,6 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
     mode[16] += rootrho_gauss*lb_phi[16]*gaussian_random_cut();
     mode[17] += rootrho_gauss*lb_phi[17]*gaussian_random_cut();
     mode[18] += rootrho_gauss*lb_phi[18]*gaussian_random_cut();
-#endif // OLD_FLUCT
 
 #elif defined (FLATNOISE)
     double rootrho = sqrt(fabs(12.0*(mode[0]+lbpar.rho[0]*lbpar.agrid*lbpar.agrid*lbpar.agrid)));
@@ -2454,7 +2443,6 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
     mode[8] += (fluct[4] = rootrho*lb_phi[8]*(d_random()-0.5));
     mode[9] += (fluct[5] = rootrho*lb_phi[9]*(d_random()-0.5));
 
-#ifndef OLD_FLUCT
     /* ghost modes */
     mode[10] += rootrho*lb_phi[10]*(d_random()-0.5);
     mode[11] += rootrho*lb_phi[11]*(d_random()-0.5);
@@ -2465,7 +2453,6 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
     mode[16] += rootrho*lb_phi[16]*(d_random()-0.5);
     mode[17] += rootrho*lb_phi[17]*(d_random()-0.5);
     mode[18] += rootrho*lb_phi[18]*(d_random()-0.5);
-#endif // !OLD_FLUCT
 #else // GAUSSRANDOM
 #error No noise type defined for the CPU LB
 #endif //GAUSSRANDOM
@@ -2702,9 +2689,6 @@ inline void lb_collide_stream() {
   }
 #endif
   
-  
-  
-
     index = lblattice.halo_offset;
     for (z = 1; z <= lblattice.grid[2]; z++) {
       for (y = 1; y<=lblattice.grid[1]; y++) {
