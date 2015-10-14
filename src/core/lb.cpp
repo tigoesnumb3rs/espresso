@@ -2466,10 +2466,12 @@ inline void lb_thermalize_modes(index_t index, double *mode) {
 inline void lb_apply_forces(index_t index, double* mode) {
 
     double rho, *f, u[3], C[6];
-
+    const double agrid = lbpar.agrid;
+    const double agrid2 = SQR(lbpar.agrid);
+    
     f = lbfields[index].force;
 
-    rho = mode[0] + lbpar.rho[0]*lbpar.agrid*lbpar.agrid*lbpar.agrid;
+    rho = mode[0] + lbpar.rho[0]*agrid2*agrid;
 
     /* hydrodynamic momentum density is redefined when external forces present */
     u[0] = (mode[1] + 0.5 * f[0])/rho;
@@ -2499,9 +2501,9 @@ inline void lb_apply_forces(index_t index, double* mode) {
     /* reset force */
 #ifdef EXTERNAL_FORCES
     // unit conversion: force density
-    lbfields[index].force[0] = lbpar.ext_force[0]*pow(lbpar.agrid,2)*lbpar.tau*lbpar.tau;
-    lbfields[index].force[1] = lbpar.ext_force[1]*pow(lbpar.agrid,2)*lbpar.tau*lbpar.tau;
-    lbfields[index].force[2] = lbpar.ext_force[2]*pow(lbpar.agrid,2)*lbpar.tau*lbpar.tau;
+    lbfields[index].force[0] = lbpar.ext_force[0]*agrid2*lbpar.tau*lbpar.tau;
+    lbfields[index].force[1] = lbpar.ext_force[1]*agrid2*lbpar.tau*lbpar.tau;
+    lbfields[index].force[2] = lbpar.ext_force[2]*agrid2*lbpar.tau*lbpar.tau;
 #else // EXTERNAL_FORCES
     lbfields[index].force[0] = 0.0;
     lbfields[index].force[1] = 0.0;

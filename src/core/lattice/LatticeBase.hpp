@@ -24,15 +24,17 @@
 #ifndef __LATTICE_BASE_HPP
 #define __LATTICE_BASE_HPP
 
-#incluce <cstdint>
+#include <cstdint>
 
 namespace Lattice {
 
-template <class value_type, char periodicity, uint8_t dim>
+template <class value_type, class iterator_type>
 class LatticeBase {
  public:
+  typedef uint64_t index_t;
+  typedef iterator_type iterator;
+  
   virtual ~LatticeBase() {}
-  virtual value_type &operator[](index_t index) = 0;
   virtual void halo_communication() = 0;
   virtual void set_halo(uint8_t halo_size[6]) = 0;
 
@@ -41,20 +43,8 @@ class LatticeBase {
   virtual index_t size() const = 0;
   virtual double element_size(index_t i) = 0;
   
-  virtual index_t *element_neighbors(index_t i) = 0;
-  virtual index_t n_neighbors() const = 0;
-  
-  typedef index_t uint64_t;
-      
-  template<class value_type>
-  class iterator {
-   public:
-    virtual value_type operator*() const = 0;
-    virtual iterator<value_type> &operator=(const iterator<value_type> &rhs) = 0;
-    virtual bool operator==(const iterator<value_type> const &rhs) const = 0;
-    virtual bool operator!=(const iterator<value_type> const &rhs) const { return ! operator==(rhs); };
-    virtual iterator<value_type> &operator++() = 0;
-  };   
+  virtual value_type **element_neighbors(index_t i) = 0;
+  virtual index_t n_neighbors() const = 0;        
 };
 
 };

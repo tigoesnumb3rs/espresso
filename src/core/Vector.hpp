@@ -48,9 +48,17 @@ public:
   }
 
   Vector& operator=(Vector& rhs) {
-    Vector tmp(rhs); swap(rhs); return *this;
+    Vector tmp(rhs);
+    swap(tmp);
+    return *this;
   };
 
+  Vector& operator=(const Vector& rhs) {
+    Vector tmp(rhs);
+    swap(tmp);
+    return *this;
+  };
+  
   Scalar &operator[](int i) {
     return d[i];
   };
