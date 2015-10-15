@@ -59,10 +59,14 @@ public:
     return *this;
   };
   
-  Scalar &operator[](int i) {
+  Scalar &operator[](int i) const {
     return d[i];
   };
 
+  const Scalar &operator()(int i) const {
+    return d[i];
+  }
+  
   inline Scalar dot(const Vector<n, Scalar> &b) const {
     Scalar sum = 0;
     for(int i = 0; i < n; i++)
@@ -92,11 +96,13 @@ public:
     c[2] = a[0]*b[1] - a[1]*b[0];
     return;
   };
+  
   inline Vector<3, Scalar> cross(const Vector<3, Scalar> &a, const Vector<3, Scalar> &b) const {
     Vector<3, Scalar> c;
     cross(a,b,c);
     return c;
   };
+  
   inline Vector<3, Scalar> cross(const Vector<3, Scalar> &a) const {
     return cross(this,a);
   };
