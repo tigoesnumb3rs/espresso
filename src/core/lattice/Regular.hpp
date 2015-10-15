@@ -52,7 +52,7 @@ class Regular : public LatticeBase<value_type, iterator_type> {
     m_total_size = data_size;
   }
   ~Regular() {
-    delete[] m_data;
+   delete[] m_data;
   }
   
   iterator_type begin() const {

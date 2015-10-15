@@ -28,6 +28,8 @@
 
 namespace Lattice {
 
+enum Periodicity { NONPERIODIC = 0, XPERIODIC = 1, YPERIODIC = 2, ZPERIODIC = 4 };
+
 template <class value_type, class iterator_type>
 class LatticeBase {
  public:

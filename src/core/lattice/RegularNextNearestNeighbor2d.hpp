@@ -17,13 +17,10 @@ class RegularNextNearestNeighbor2d : public Regular<value_type, periodicity, 2, 
   
   RegularNextNearestNeighbor2d(double h, Vector< 2, index_t> size) :
       Base(h, size) {}
-
-#include <stdio.h>
   
   value_type **element_neighbors(index_t i) {
     assert(i < m_total_size);
     const Vector<2, index_t> coords = lin_to_t(i);
-    printf("coords %d %d\n", coords[0], coords[1]);
     int cnt = 0;
     for(int dx = -1; dx <= 1; dx++) {
       for(int dy = -1; dy <= 1; dy++) {
