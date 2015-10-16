@@ -34,7 +34,12 @@ class RegularIterator :  public std::iterator<std::input_iterator_tag, value_typ
   value_type *m_p;
 };
 
-
+/*!
+  Implementation of Lattice::Base as a regular cubic grid.
+  \tparam value_type The type of the data stored in the lattice.
+  \tparam periodicity Configure periodic boundaries
+  \tparam dim Dimensionality of the lattice.
+*/
 template <class value_type, uint64_t periodicity = 7, uint8_t dim = 3, class iterator_type = RegularIterator<value_type> >
 class Regular : public LatticeBase<value_type, iterator_type> {
  public:
