@@ -20,9 +20,10 @@ class RegularNearestNeighbor : public Regular<value_type, periodicity, dim, iter
   RegularNearestNeighbor(double h, Vector< dim, index_t> size) :
       Regular<value_type, periodicity, dim, iterator_type>(h, size) {}
   
-  value_type **element_neighbors(index_t i) {
-    assert(i < m_total_size);
-    const Vector<dim, index_t> cellindex = lin_to_t(i);
+  value_type **element_neighbors(value_type *node) {
+    assert(node >= m_data);
+    assert(node < m_data + m_total_size);
+    const Vector<dim, index_t> cellindex = lin_to_t(node - m_data);
     for(int j = 0; j < dim; j++) {
       const bool periodic = periodicity & (1 << j);
       Vector<dim, index_t> t = cellindex;

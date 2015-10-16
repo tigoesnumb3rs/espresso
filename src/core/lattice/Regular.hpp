@@ -63,7 +63,7 @@ class Regular : public LatticeBase<value_type, iterator_type> {
     return iterator_type(m_data + m_total_size);
   }
 
-  Vector<dim, index_t> lin_to_t(index_t i) {
+  Vector<dim, index_t> lin_to_t(index_t i) const {
     Vector<dim, index_t> ret;
 
     for(int j = dim-1; j >= 0; j--) {
@@ -75,7 +75,7 @@ class Regular : public LatticeBase<value_type, iterator_type> {
     return ret;
   }
 
-  index_t t_to_lin(Vector<dim, index_t> t) {
+  index_t t_to_lin(const Vector<dim, index_t> t) const {
     index_t ret = 0;
     for(int j = 0; j < dim; j++) {
       ret = t[j] + ret*m_size[j];

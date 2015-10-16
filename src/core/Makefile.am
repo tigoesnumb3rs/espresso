@@ -113,7 +113,8 @@ libEspresso_la_SOURCES = \
 	PdbParser.cpp PdbParser.hpp \
 	RunningAverage.cpp RunningAverage.hpp \
 	lattice/LatticeBase.hpp \
-	lattice/Regular.hpp lattice/Regular.cpp
+	lattice/Regular.hpp lattice/Regular.cpp \
+	lattice_boltzmann/LBNode.hpp
 
 # nonbonded potentials and forces
 libEspresso_la_SOURCES += \

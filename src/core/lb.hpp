@@ -80,7 +80,9 @@ extern int lb_components ; // global variable holding the number of fluid compon
  *  velocity sub-lattice and the corresponding coefficients 
  *  of the pseudo-equilibrium distribution */
 typedef struct {
-
+  /** dimension */
+  int dim;
+  
   /** number of velocities */
   int n_veloc ;
 

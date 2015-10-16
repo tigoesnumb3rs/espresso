@@ -18,9 +18,10 @@ class RegularNextNearestNeighbor2d : public Regular<value_type, periodicity, 2, 
   RegularNextNearestNeighbor2d(double h, Vector< 2, index_t> size) :
       Base(h, size) {}
   
-  value_type **element_neighbors(index_t i) {
-    assert(i < m_total_size);
-    const Vector<2, index_t> coords = lin_to_t(i);
+  value_type **element_neighbors(value_type *node) {
+    assert(node >= m_data);
+    assert(node < m_data + m_total_size);
+    const Vector<2, index_t> coords = lin_to_t(node - m_data);
     int cnt = 0;
     for(int dx = -1; dx <= 1; dx++) {
       for(int dy = -1; dy <= 1; dy++) {
