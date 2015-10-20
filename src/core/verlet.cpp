@@ -184,7 +184,9 @@ void calculate_verlet_ia()
 #ifdef CONSTRAINTS
         add_constraints_forces(&p1[i]);
 #endif
+#ifdef EXTERNAL_FORCES
         add_external_potential_forces(&p1[i]);
+#endif
       }
     }
 
@@ -260,7 +262,9 @@ void build_verlet_lists_and_calc_verlet_ia()
 #ifdef CONSTRAINTS
             add_constraints_forces(&p1[i]);
 #endif
+#ifdef EXTERNAL_FORCES
             add_external_potential_forces(&p1[i]);
+#endif
             memcpy(p1[i].l.p_old, p1[i].r.p, 3*sizeof(double));
             j_start = i+1;
           }
