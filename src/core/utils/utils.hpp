@@ -73,18 +73,6 @@
  * data types
  ************************************************/
 
-/** Integer list. 
-    Use the functions specified in list operations. */
-typedef struct {
-  /** Dynamically allocated integer field. */
-  int *e;
-  /** number of used elements in the integer field. */
-  int n;
-  /** allocated size of the integer field. This value is ONLY changed
-      in the routines specified in list operations ! */
-  int max;
-} IntList;
-
 /** Double list.
     Use the functions specified in list operations. */
 typedef struct {
@@ -107,39 +95,8 @@ typedef struct {
    reallocating to 0 also. To avoid this, we use our own malloc and realloc procedures. */
 
 namespace Utils {
-  /** used instead of realloc.
-      Makes sure that resizing to zero FREEs pointer */
-  inline void *realloc(void *old, int size) {
-    void *p;
-    if (size <= 0) {
-      ::free(old);
-      return NULL;
-    }
-    p = (void *)::realloc(old, size);
-    if(p == NULL) {
-      fprintf(stderr, "Could not allocate memory.\n");
-      errexit();
-    }
-    return p;
-  }
 
-  /** used instead of malloc.
-      Makes sure that a zero size allocation returns a NULL pointer */
-  inline void *malloc(int size)
-  {
-    void *p;
-    if (size <= 0) {
-      return NULL;
-    }
-    p = (void *)::malloc(size);
-    if(p == NULL) {
-      fprintf(stderr, "Could not allocate memory.\n");
-      errexit();
-    }
-    return p;
-  }
-
-  /** Calculate signum of val, is supported by T */
+  /** Calculate signum of val, if supported by T */
   template <typename T>
   int sgn(T val) {
     return (T(0) < val) - (val < T(0));
@@ -160,65 +117,6 @@ namespace Utils {
 #define PMASS(pt) 1
 #endif
 
-/*************************************************************/
-/** \name List operations .                                  */
-/*************************************************************/
-/*@{*/
-
-/** Initialize an \ref IntList.  */
-inline void init_intlist(IntList *il)
-{
-  il->n   = 0;
-  il->max = 0;
-  il->e   = NULL;
-}
-extern int this_node;
-
-/** Allocate an \ref IntList of size size. If you need an \ref IntList
-    with variable size better use \ref realloc_intlist */
-inline void alloc_intlist(IntList *il, int size)
-{
-  il->max = size;
-  il->e = (int *) Utils::malloc(sizeof(int)*il->max);
-}
-
-/** Reallocate an \ref IntList */
-inline void realloc_intlist(IntList *il, int size)
-{
-  if(size != il->max) {
-    il->max = size;
-    il->e = (int *) Utils::realloc(il->e, sizeof(int)*il->max);
-  }
-}
-
-/** Allocate an \ref IntList, but only to multiples of grain. */
-inline void alloc_grained_intlist(IntList *il, int size, int grain)
-{
-  il->max = grain*((size + grain - 1)/grain);
-  il->e = (int *) Utils::malloc(sizeof(int)*il->max);
-}
-
-/** Reallocate an \ref IntList, but only to multiples of grain. */
-inline void realloc_grained_intlist(IntList *il, int size, int grain)
-{
-  if(size >= il->max)
-    il->max = grain*((size + grain - 1)/grain);
-  else
-    /* shrink not as fast, just lose half, rounded up */
-    il->max = grain*(((il->max + size + 1)/2 +
-		      grain - 1)/grain);
-
-  il->e = (int *) Utils::realloc(il->e, sizeof(int)*il->max);
-}
-
-/** Check wether an \ref IntList contains the value c */
-inline int intlist_contains(IntList *il, int c)
-{
-  int i;
-  for (i = 0; i < il->n; i++)
-    if (c == il->e[i]) return 1;
-  return 0;
-}
 
 /** Initialize an \ref DoubleList.  */
 inline void init_doublelist(DoubleList *il)

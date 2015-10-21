@@ -329,6 +329,9 @@ typedef struct {
     (we hope) algorithm to avoid unnecessary resizes.
     Access using \ref realloc_particlelist, \ref got_particle,...
 */
+
+/* @TODO: Reduce memory footprint */
+
 typedef struct {
   /** The particles payload */
   Particle *part;
