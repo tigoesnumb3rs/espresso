@@ -26,6 +26,10 @@ namespace Utils { namespace Timing {
       static Timer& get_timer(const std::string &name) {
 	return m_timers[name];
       }
+      
+      static std::unordered_map<std::string, Timer> get_all_timers() {
+	return m_timers;
+      }
     private:
       static std::unordered_map<std::string, Timer> m_timers;
       Statistics::RunningAverage<double> m_running_average;
