@@ -31,14 +31,27 @@ using namespace Utils::Timing;
 using std::cout;
 using std::endl;
 
-BOOST_AUTO_TEST_CASE(timer) {
+BOOST_AUTO_TEST_CASE(sampling) {
   Timer &t = Timer::get_timer(std::string("test_timer"));
 
-  for(int i = 0; i < 1000; i++) {
+  for(int i = 0; i < 100; i++) {
     t.start();
     usleep(1000);
     t.stop();
   }
 
-  cout << "avg " << t.average().avg() << " sigma " << std::sqrt(t.average().var()) << endl;
+  BOOST_CHECK(t.average().n() == 100);
+}
+
+/**
+ * Check that we can get the timer back by name
+ */
+BOOST_AUTO_TEST_CASE(get_timer) {
+  Timer &t = Timer::get_timer(std::string("test_timer"));
+
+  t.start();
+  usleep(1000);
+  t.stop();
+
+  BOOST_CHECK(t.average().n() == 101);
 }
