@@ -79,6 +79,8 @@
 #include "scafacos.hpp"
 #include "mpiio.hpp"
 
+#include "utils/Timer.hpp"
+
 using namespace std;
 
 int this_node = -1;
@@ -1401,6 +1403,14 @@ int mpi_integrate(int n_steps, int reuse_forces)
       autoupdate_correlations();
     }
   }
+
+  auto &t = Utils::Timing::Timer::get_timer("calculate_verlet_ia()");
+
+  printf("calculate_verlet_ia(): avg %.2e +/- %.2e\n", 1000.*t.average().avg(), 1000.*t.average().sig());
+
+  t = Utils::Timing::Timer::get_timer("build_verlet_lists_and_calc_verlet_ia()");
+  printf("build_verlet_lists_and_calc_verlet_ia(): avg %.2e +/- %.2e\n", 1000.*t.average().avg(), 1000.*t.average().sig());
+  
   return mpi_check_runtime_errors();
 }
 

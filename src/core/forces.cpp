@@ -31,6 +31,8 @@
 #include "forces_inline.hpp"
 #include "electrokinetics.hpp"
 
+#include "utils/Timer.hpp"
+
 #include <cassert>
 ActorList forceActors;
 
@@ -178,10 +180,10 @@ espressoSystemInterface.update();
     break;
   case CELL_STRUCTURE_DOMDEC:
     if(dd.use_vList) {
-      if (rebuild_verletlist)
+      if (rebuild_verletlist) {
         build_verlet_lists_and_calc_verlet_ia();
       else
-    calculate_verlet_ia();
+        calculate_verlet_ia();
     }
     else
       calc_link_cell();

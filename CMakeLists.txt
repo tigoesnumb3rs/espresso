@@ -42,7 +42,10 @@ option(WITH_TCL    "Build tcl interface"     ON)
 option(WITH_CUDA   "Build with GPU support"  ON)
 option(WITH_TESTS  "Enable tests"            ON)
 option(WITH_SCAFACOS "Build with Scafacos support" ON)
+
+# Developer options
 option(WITH_VALGRIND_INSTRUMENTATION "Build with valgrind instrumentation markers" OFF)
+option(WITH_INTRUSIVE_TIMINGS "Build with intrusive timing functions." OFF)
 
 # choose the name of the config file
 set(MYCONFIG_NAME "myconfig.hpp"
