@@ -47,3 +47,7 @@ set(Timer_test_SRC Timer_test.cpp ../utils/Timer.cpp ../utils/statistics/Running
 unit_test(Timer_Test "${Timer_test_SRC}")
 
 unit_test(ScriptInterface_test ScriptInterface_test.cpp)
+
+set(Wall_test_SRC Wall_test.cpp ../shapes/Wall.cpp)
+unit_test(Wall_test "${Wall_test_SRC}")
+unit_test(Factory_test Factory_test.cpp)
