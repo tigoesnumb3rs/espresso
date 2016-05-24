@@ -53,4 +53,3 @@ unit_test(Wall_test "${Wall_test_SRC}")
 
 unit_test(Factory_test Factory_test.cpp)
 unit_test(NumeratedContainer_test NumeratedContainer_test.cpp)
-
