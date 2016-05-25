@@ -43,8 +43,8 @@ unit_test(RunningAverage_test RunningAverage_test.cpp)
 set(RuntimeErrorCollector_test_SRC RuntimeErrorCollector_test.cpp ../RuntimeErrorCollector.cpp ../RuntimeError.cpp)
 unit_test(RuntimeErrorCollector_test "${RuntimeErrorCollector_test_SRC}")
 
-set(Timer_test_SRC Timer_test.cpp ../utils/Timer.cpp ../utils/statistics/RunningAverage.cpp)
-unit_test(Timer_Test "${Timer_test_SRC}")
+set(Timer_test_SRC Timer_test.cpp ../utils/Timer.cpp)
+unit_test(Timer_test "${Timer_test_SRC}")
 
 unit_test(ScriptInterface_test ScriptInterface_test.cpp)
 
