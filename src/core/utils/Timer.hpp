@@ -19,7 +19,7 @@ namespace Utils { namespace Timing {
 	m_running_average.add_sample(time);
       }
       
-      const Statistics::RunningAverage<double> &average() {
+      const Statistics::RunningAverage<double> &stats() const {
 	return m_running_average;
       }
 

@@ -181,16 +181,17 @@ espressoSystemInterface.update();
   case CELL_STRUCTURE_DOMDEC:
     if(dd.use_vList) {
       if (rebuild_verletlist) {
-        build_verlet_lists_and_calc_verlet_ia();
-      else
-        calculate_verlet_ia();
-    }
-    else
+	build_verlet_lists_and_calc_verlet_ia();
+      } else {
+	calculate_verlet_ia();
+      }
+    } else {
       calc_link_cell();
+    }
     break;
   case CELL_STRUCTURE_NSQUARE:
     nsq_calculate_ia();
-
+    break;
   }
 
 #ifdef OIF_GLOBAL_FORCES
@@ -216,6 +217,8 @@ espressoSystemInterface.update();
 #ifdef COMFORCE
   calc_comforce();
 #endif
+
+
 
 #ifdef METADYNAMICS
   /* Metadynamics main function */
