@@ -42,6 +42,8 @@
 #include "nsquare.hpp"
 #include "layered.hpp"
 
+#include "utils/Timer.hpp"
+
 /* Variables */
 
 /** list of all cells. */
@@ -330,6 +332,10 @@ static void dump_particle_ordering()
 
 void cells_resort_particles(int global_flag)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t = Utils::Timing::Timer::get_timer("cells_resort_particles");
+  t.start();
+#endif
   CELL_TRACE(fprintf(stderr, "%d: entering cells_resort_particles %d\n", this_node, global_flag));
 
   invalidate_ghosts();
@@ -347,6 +353,9 @@ void cells_resort_particles(int global_flag)
   case CELL_STRUCTURE_DOMDEC:
     dd_exchange_and_sort_particles(global_flag);
     break;
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t.stop();
+#endif
   }
 
 #ifdef ADDITIONAL_CHECKS

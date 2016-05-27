@@ -36,6 +36,8 @@
 #include "initialize.hpp"
 #include "external_potential.hpp"
 
+#include "utils/Timer.hpp"
+
 /************************************************/
 /** \name Defines */
 /************************************************/
@@ -922,6 +924,10 @@ void dd_topology_release()
 /************************************************************/
 void  dd_exchange_and_sort_particles(int global_flag)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t = Utils::Timing::Timer::get_timer("dd_exchange_and_sort_particles");
+  t.start();
+#endif  
   int dir, c, p, i, finished=0;
   ParticleList *cell,*sort_cell, send_buf_l, send_buf_r, recv_buf_l, recv_buf_r;
   Particle *part;
@@ -1119,6 +1125,9 @@ void  dd_exchange_and_sort_particles(int global_flag)
 #endif
 
   CELL_TRACE(fprintf(stderr,"%d: dd_exchange_and_sort_particles finished\n",this_node));
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t.stop();
+#endif
 }
 
 /*************************************************/

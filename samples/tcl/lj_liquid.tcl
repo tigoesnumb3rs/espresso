@@ -47,8 +47,9 @@ set vmd_output "no"
 #############################################################
 
 # 10 000  Particles
-set box_l   10.7437
+#set box_l   100.7437
 set density 0.7
+set n_part 100000
 
 # Interaction parameters (repulsive Lennard Jones)
 #############################################################
@@ -85,6 +86,8 @@ set tcl_precision 6
 # Interaction setup
 #############################################################
 
+set box_l [expr ($n_part/$density)**(1./3.)] 
+puts $box_l
 setmd box_l $box_l $box_l $box_l
 
 inter 0 0 lennard-jones $lj1_eps $lj1_sig $lj1_cut auto
@@ -93,7 +96,7 @@ inter 0 0 lennard-jones $lj1_eps $lj1_sig $lj1_cut auto
 #############################################################
 
 set volume [expr $box_l*$box_l*$box_l]
-set n_part [expr floor($volume*$density)]
+#set n_part [expr floor($volume*$density)]
 
 for {set i 0} { $i < $n_part } {incr i} {
     set posx [expr $box_l*[t_random]]

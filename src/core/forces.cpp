@@ -123,9 +123,21 @@ void check_forces()
 
 void force_calc()
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t = Utils::Timing::Timer::get_timer("force_calc");
+  t.start();
+#endif
+
+#ifdef WITH_INTRUSIVE_TIMINGS
+auto &t_cells_update_ghosts = Utils::Timing::Timer::get_timer("cells_update_ghosts");
+  t_cells_update_ghosts.start();
+#endif
   // Communication step: distribute ghost positions
   cells_update_ghosts();
-
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_cells_update_ghosts.stop();
+#endif  
+  
   // VIRTUAL_SITES pos (and vel for DPD) update for security reason !!!
 #ifdef VIRTUAL_SITES
   update_mol_vel_pos();
@@ -161,8 +173,16 @@ espressoSystemInterface.update();
   if (iccp3m_initialized && iccp3m_cfg.set_flag)
     iccp3m_iteration();
 #endif
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_init_forces = Utils::Timing::Timer::get_timer("init_forces");
+  t_init_forces.start();
+#endif
   init_forces();
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_init_forces.stop();
+#endif
 
+  
   for (ActorList::iterator actor = forceActors.begin();
           actor != forceActors.end(); ++actor)
   {
@@ -181,11 +201,15 @@ espressoSystemInterface.update();
   case CELL_STRUCTURE_DOMDEC:
     if(dd.use_vList) {
       if (rebuild_verletlist) {
+#ifdef WITH_INTRUSIVE_TIMINGS
 	auto &t = Utils::Timing::Timer::get_timer("build_verlet_lists_and_calc_verlet_ia");
 	
 	t.start();
+#endif
 	build_verlet_lists_and_calc_verlet_ia();
+#ifdef WITH_INTRUSIVE_TIMINGS
 	t.stop();
+#endif
       } else {
 	auto &t = Utils::Timing::Timer::get_timer("calculate_verlet_ia");
 
@@ -260,6 +284,9 @@ espressoSystemInterface.update();
   // mark that forces are now up-to-date
   recalc_forces = 0;
 
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t.stop();
+#endif
 }
 
 void calc_long_range_forces()

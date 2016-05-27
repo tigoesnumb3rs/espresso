@@ -38,6 +38,8 @@
 #include "particle_data.hpp"
 #include "forces_inline.hpp"
 
+#include "utils/Timer.hpp"                     
+
 /** Tag for communication in ghost_comm. */
 #define REQ_GHOST_SEND 100
 
@@ -423,6 +425,10 @@ void add_forces_from_recv_buffer(GhostCommunication *gc)
 
 void cell_cell_transfer(GhostCommunication *gc, int data_parts)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t = Utils::Timing::Timer::get_timer("cell_cell_transfer");
+  t.start();
+#endif
   int pl, p, offset;
   Particle *part1, *part2, *pt1, *pt2;
 
@@ -499,6 +505,9 @@ void cell_cell_transfer(GhostCommunication *gc, int data_parts)
       }
     }
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t.stop();
+#endif
 }
 
 void reduce_forces_sum(void *add, void *to, int *len, MPI_Datatype *type)
@@ -532,6 +541,10 @@ static int is_recv_op(int comm_type, int node)
 
 void ghost_communicator(GhostCommunicator *gc)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t = Utils::Timing::Timer::get_timer("ghost_communicator");
+  t.start();
+#endif
   MPI_Status status;
   int n, n2;
   int data_parts = gc->data_parts;
@@ -695,6 +708,9 @@ void ghost_communicator(GhostCommunicator *gc)
       }
     }
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t.stop();
+#endif
 }
 
 void ghost_init()
