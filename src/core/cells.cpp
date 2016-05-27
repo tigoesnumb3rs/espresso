@@ -353,9 +353,6 @@ void cells_resort_particles(int global_flag)
   case CELL_STRUCTURE_DOMDEC:
     dd_exchange_and_sort_particles(global_flag);
     break;
-#ifdef WITH_INTRUSIVE_TIMINGS
-    t.stop();
-#endif
   }
 
 #ifdef ADDITIONAL_CHECKS
@@ -373,6 +370,9 @@ void cells_resort_particles(int global_flag)
 
   CELL_TRACE(dump_particle_ordering());
   CELL_TRACE(fprintf(stderr, "%d: leaving cells_resort_particles\n", this_node));
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t.stop();
+#endif
 }
 
 /*************************************************/
