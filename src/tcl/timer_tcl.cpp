@@ -32,19 +32,29 @@ using namespace std;
 using Utils::Timing::Timer;
 
 namespace {
-string format_timer(const Timer &t) {
+string format_stats(const Utils::Timing::Timer::Stats &stats) {
   ostringstream ss;
 
-  ss << t.stats().avg() << " " << t.stats().sig() << " " << t.stats().n();
+  ss << stats.avg() << " " << stats.sig() << " " << stats.n();
 
   return ss.str();
 }
 }
-  
-int tclcommand_timer(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
-  auto timers = Timer::get_all_timers();
 
-  for(auto &it : timers) {
-    Tcl_AppendResult(interp, "{ ", it.first.c_str(),  format_timer(it.second).c_str(), " }", nullptr);
+vector<map<string, Utils::Timing::Timer::Stats> >
+mpi_gather_timers();
+
+int tclcommand_timer(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
+  auto timers = mpi_gather_timers();
+  char buf[8];
+  
+  for(int i = 0; i < timers.size(); ++i) {
+    snprintf(buf, 8, "%d", i);
+
+    for(auto &it : timers[i]) {      
+      Tcl_AppendResult(interp, "{ ", buf, " ", it.first.c_str(), " ", format_stats(it.second).c_str(), " } ", nullptr);
+    }
   }
+
+  return TCL_OK;
 }

@@ -64,6 +64,8 @@
 #include "immersed_boundary/ibm_volume_conservation.hpp"
 #include "minimize_energy.hpp"
 
+#include "utils/Timer.hpp"
+
 #ifdef VALGRIND_INSTRUMENTATION
 #include <callgrind.h>
 #endif
@@ -219,6 +221,7 @@ void integrate_ensemble_init()
 
 void integrate_vv(int n_steps, int reuse_forces)
 {
+  Utils::Timing::Timer::get_timer("integrate_vv").start();  
   /* Prepare the Integrator */
   on_integration_start();
  
@@ -575,6 +578,7 @@ void integrate_vv(int n_steps, int reuse_forces)
     ghmc_close();
 #endif
 
+  Utils::Timing::Timer::get_timer("integrate_vv").stop();  
 }
 
 /************************************************************/

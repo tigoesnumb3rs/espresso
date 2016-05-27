@@ -19,6 +19,8 @@
 
 #cmakedefine VALGRIND_INSTRUMENTATION
 
+#cmakedefine INTRUSIVE_TIMINGS
+
 #define PACKAGE_NAME "${PROJECT_NAME}"
 
 #define __PRETTYFUNC__ @__PRETTYFUNC__@

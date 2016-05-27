@@ -41,7 +41,7 @@ set name  "lj_liquid"
 set ident "_s1"
 
 # 
-set vmd_output "yes"
+set vmd_output "no"
 
 # System parameters
 #############################################################
@@ -223,4 +223,9 @@ close $obs_file
 
 # terminate program
 puts "\n\nFinished"
+
+foreach t [timer] {
+    puts "[lindex $t 0] [lindex $t 1] [format %.2e [lindex $t 2]]"
+}
+
 exit

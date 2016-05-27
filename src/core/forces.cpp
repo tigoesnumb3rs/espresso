@@ -181,9 +181,17 @@ espressoSystemInterface.update();
   case CELL_STRUCTURE_DOMDEC:
     if(dd.use_vList) {
       if (rebuild_verletlist) {
+	auto &t = Utils::Timing::Timer::get_timer("build_verlet_lists_and_calc_verlet_ia");
+	
+	t.start();
 	build_verlet_lists_and_calc_verlet_ia();
+	t.stop();
       } else {
+	auto &t = Utils::Timing::Timer::get_timer("calculate_verlet_ia");
+
+	t.start();
 	calculate_verlet_ia();
+	t.stop();
       }
     } else {
       calc_link_cell();

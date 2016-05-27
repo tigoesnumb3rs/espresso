@@ -28,6 +28,7 @@
 
 #include <boost/mpi.hpp>
 #include <boost/serialization/string.hpp>
+#include <boost/serialization/map.hpp>
 
 #include "utils.hpp"
 #include "communication.hpp"
@@ -180,6 +181,8 @@ static int terminated = 0;
   CB(mpi_thermalize_cpu_slave) \
   CB(mpi_scafacos_set_parameters_slave) \
   CB(mpi_mpiio_slave) \
+  CB(mpi_gather_timers_slave) \
+ 
   
 // create the forward declarations
 #define CB(name) void name(int node, int param);
@@ -3305,6 +3308,26 @@ void mpi_gather_cuda_devices_slave(int dummy1, int dummy2) {
 #endif
 }
 
+void mpi_gather_timers_slave(int, int) {
+  map<string, Utils::Timing::Timer::Stats> my_stats = Utils::Timing::Timer::get_stats();
+
+  boost_comm.send(0, SOME_TAG, my_stats);
+}
+
+vector<map<string, Utils::Timing::Timer::Stats> >
+mpi_gather_timers() {
+  vector<map<string, Utils::Timing::Timer::Stats> > ret(boost_comm.size());
+
+  ret[0] = Utils::Timing::Timer::get_stats();
+
+  mpi_call(mpi_gather_timers_slave, 0, 0);
+  
+  for(int i = 1; i < ret.size(); ++i) {
+    boost_comm.recv(i, SOME_TAG, ret[i]);
+  }
+
+  return ret;
+}
 
 void mpi_mpiio(const char *filename, unsigned fields, int write) {
   size_t flen = strlen(filename) + 1;
