@@ -293,7 +293,7 @@ void mpi_init(int *argc, char ***argv)
     
   initRuntimeErrorCollector();
 
-  boost_comm = boost::mpi::communicator(comm_cart, boost::mpi::comm_attach);      
+  boost_comm = boost::mpi::communicator(comm_cart, boost::mpi::comm_attach).split(true);      
 }
 
 void mpi_call(SlaveCallback cb, int node, int param) {
