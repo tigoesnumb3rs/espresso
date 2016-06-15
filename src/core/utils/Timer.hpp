@@ -19,8 +19,8 @@ namespace Utils { namespace Timing {
     public:
       struct Stats {
 	Stats() {}
-	Stats(double avg, double sig, int n)
-	  : m_avg(avg), m_sig(sig), m_n(n)
+	Stats(double avg, double sig, double var,double min, double max, int n)
+	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n)
 	{}
 
 	double avg() const {
@@ -31,17 +31,32 @@ namespace Utils { namespace Timing {
 	  return m_sig;
 	}
 
+	double var() const {
+	  return m_var;
+	}
+	
+	double min() const {
+	  return m_min;
+	}
+
+	double max() const {
+	  return m_max;
+	}
+	
 	int n() const {
 	  return m_n;
 	}
 	
-	double m_avg, m_sig;
+	double m_avg, m_sig, m_var, m_min, m_max;
 	int m_n;
 
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version) {
 	  ar & m_avg;
 	  ar & m_sig;
+	  ar & m_var;
+	  ar & m_min;
+	  ar & m_max;
 	  ar & m_n;
 	}
       };
@@ -52,7 +67,8 @@ namespace Utils { namespace Timing {
       
       double stop() {
 	const double time = MPI_Wtime() - m_mark;
-	m_running_average.add_sample(time);
+	if(time > 0.0)
+	  m_running_average.add_sample(time);
 
 	return time;
       }
@@ -60,6 +76,9 @@ namespace Utils { namespace Timing {
       Stats stats() const {
 	return Stats(m_running_average.avg(),
 		     m_running_average.sig(),
+		     m_running_average.var(),
+		     m_running_average.min(),
+		     m_running_average.max(),
 		     m_running_average.n());
       }
 
