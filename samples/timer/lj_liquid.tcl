@@ -227,8 +227,12 @@ close $obs_file
 # terminate program
 puts "\n\nFinished"
 
+puts "MPIPID FUNCTIONNAME MEAN STANDARD-DEVIATION VARIANCE MIN MAX #CALLS"
 foreach t [timer] {
-    puts "[lindex $t 0] [lindex $t 1] [format %.2e [lindex $t 2]]"
+# output of timers could be formated: 
+#    puts "[lindex $t 0] [lindex $t 1] [format %.2e [lindex $t 2]]"
+# it can easily be changed in 'src/tcl/timer_tcl.cpp'
+puts $t
 }
 
 exit
