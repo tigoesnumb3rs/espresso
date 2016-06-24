@@ -20,7 +20,7 @@ namespace Utils { namespace Timing {
       struct Stats {
 	Stats() {}
 	Stats(double avg, double sig, double var,double min, double max, int n, double t)
-	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n), m_t
+	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n), m_t(t)
 	{}
 
 	double avg() const {
