@@ -35,7 +35,7 @@ namespace Statistics {
 template<typename Scalar>
 class RunningAverage {
 public:
-  RunningAverage() : m_n(0), m_new_var(0.0), m_min(std::numeric_limits<double>::max()), m_max(-std::numeric_limits<double>::max(), m_t(0)) {};
+  RunningAverage() : m_n(0), m_new_var(0.0), m_min(std::numeric_limits<double>::max()), m_max(-std::numeric_limits<double>::max()), m_t(0.0) {};
   void add_sample(Scalar s) {
     m_n++;
 

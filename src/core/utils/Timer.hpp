@@ -19,8 +19,8 @@ namespace Utils { namespace Timing {
     public:
       struct Stats {
 	Stats() {}
-	Stats(double avg, double sig, double var,double min, double max, int n, double t)
-	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n), m_t(t)
+	Stats(double avg, double sig, double var, double min, double max, double t, int n)
+	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_t(t), m_n(n)
 	{}
 
 	double avg() const {
