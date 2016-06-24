@@ -88,8 +88,6 @@
 #include "immersed_boundary/ibm_tribend.hpp"
 #endif
 
-#include "utils/Timer.hpp"
-
 /** initialize the forces for a ghost particle */
 inline void init_ghost_force(Particle *part)
 {
@@ -488,10 +486,6 @@ inline void add_non_bonded_pair_force(Particle *p1, Particle *p2,
 
 inline void add_bonded_force(Particle *p1)
 {
-#ifdef WITH_INTRUSIVE_TIMINGS
-  auto &t = Utils::Timing::Timer::get_timer("add_bonded_force");
-  t.start();
-#endif
   double dx[3]     = { 0., 0., 0. };
   double force[3]  = { 0., 0., 0. };
   double force2[3] = { 0., 0., 0. };
@@ -872,9 +866,6 @@ inline void add_bonded_force(Particle *p1)
       }
     }
   }
-#ifdef WITH_INTRUSIVE_TIMINGS
-  t.stop();
-#endif
 }  
 
 /** add force to another. This is used when collecting ghost forces. */
