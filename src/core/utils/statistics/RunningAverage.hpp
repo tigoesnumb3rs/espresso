@@ -35,10 +35,12 @@ namespace Statistics {
 template<typename Scalar>
 class RunningAverage {
 public:
-  RunningAverage() : m_n(0), m_new_var(0.0), m_min(std::numeric_limits<double>::max()), m_max(-std::numeric_limits<double>::max()) {};
+  RunningAverage() : m_n(0), m_new_var(0.0), m_min(std::numeric_limits<double>::max()), m_max(-std::numeric_limits<double>::max(), m_t(0)) {};
   void add_sample(Scalar s) {
     m_n++;
 
+    m_t = s;
+    
     if(m_n == 1) {
       m_old_avg = m_new_avg = s;
       m_old_var = 0.0;
@@ -70,6 +72,11 @@ public:
     return m_n;
   }
 
+  /** Time of the last sample */
+  Scalar t() const { 
+    return m_t;
+  }
+  
   /** Average of the samples */
   Scalar avg() const { 
     if(m_n > 0)
@@ -77,6 +84,7 @@ public:
     else
       return 0.0;
   }
+
   /** Variance of the samples */
   Scalar var() const {
     if(m_n > 1)
@@ -106,6 +114,7 @@ public:
   Scalar m_old_avg, m_new_avg;
   Scalar m_old_var, m_new_var;
   Scalar m_min, m_max;
+  Scalar m_t;
 };
 
 }

@@ -19,8 +19,8 @@ namespace Utils { namespace Timing {
     public:
       struct Stats {
 	Stats() {}
-	Stats(double avg, double sig, double var,double min, double max, int n)
-	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n)
+	Stats(double avg, double sig, double var,double min, double max, int n, double t)
+	  : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n), m_t
 	{}
 
 	double avg() const {
@@ -42,12 +42,16 @@ namespace Utils { namespace Timing {
 	double max() const {
 	  return m_max;
 	}
+
+	double t() const {
+	  return m_t;
+	}
 	
 	int n() const {
 	  return m_n;
 	}
 	
-	double m_avg, m_sig, m_var, m_min, m_max;
+	double m_avg, m_sig, m_var, m_min, m_max, m_t;
 	int m_n;
 
 	template<class Archive>
@@ -57,6 +61,7 @@ namespace Utils { namespace Timing {
 	  ar & m_var;
 	  ar & m_min;
 	  ar & m_max;
+	  ar & m_t;
 	  ar & m_n;
 	}
       };
@@ -79,6 +84,7 @@ namespace Utils { namespace Timing {
 		     m_running_average.var(),
 		     m_running_average.min(),
 		     m_running_average.max(),
+		     m_running_average.t(),
 		     m_running_average.n());
       }
 
