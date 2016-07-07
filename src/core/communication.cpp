@@ -283,10 +283,6 @@ void mpi_init(int *argc, char ***argv) {
     mpiCallbacks().add(slave_callbacks[i]);
   }
 
-<<<<<<< ours
-  boost_comm =
-      boost::mpi::communicator(comm_cart, boost::mpi::comm_attach).split(true);      
-=======
   ErrorHandling::init_error_handling(mpiCallbacks());
 }
 
@@ -299,7 +295,6 @@ void mpi_reshape_communicator(std::array<int, 3> const &node_grid,
       boost::mpi::communicator(temp_comm, boost::mpi::comm_take_ownership);
 
   MPI_Comm_rank(comm_cart, &this_node);
->>>>>>> theirs
 }
 
 void mpi_call(SlaveCallback cb, int node, int param) {
@@ -3129,30 +3124,27 @@ void mpi_gather_cuda_devices_slave(int dummy1, int dummy2) {
 #endif
 }
 
-<<<<<<< ours
 void mpi_gather_timers_slave(int, int) {
   map<string, Utils::Timing::Timer::Stats> my_stats =
       Utils::Timing::Timer::get_stats();
 
-  boost_comm.send(0, SOME_TAG, my_stats);
+  comm_cart.send(0, SOME_TAG, my_stats);
 }
 
 vector<map<string, Utils::Timing::Timer::Stats>> mpi_gather_timers() {
-  vector<map<string, Utils::Timing::Timer::Stats>> ret(boost_comm.size());
+  vector<map<string, Utils::Timing::Timer::Stats>> ret(comm_cart.size());
 
   ret[0] = Utils::Timing::Timer::get_stats();
 
   mpi_call(mpi_gather_timers_slave, 0, 0);
 
   for (int i = 1; i < ret.size(); ++i) {
-    boost_comm.recv(i, SOME_TAG, ret[i]);
+    comm_cart.recv(i, SOME_TAG, ret[i]);
   }
 
   return ret;
 }
 
-=======
->>>>>>> theirs
 void mpi_mpiio(const char *filename, unsigned fields, int write) {
   size_t flen = strlen(filename) + 1;
   if (flen + 5 > INT_MAX) {
