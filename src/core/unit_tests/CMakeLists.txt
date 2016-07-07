@@ -19,7 +19,7 @@
 
 # Build tests only when testing
 set_directory_properties(PROPERTIES EXCLUDE_FROM_ALL ON)
-  
+
 # Target for the unit tests
 add_custom_target(check_unit_tests COMMAND ${CMAKE_CTEST_COMMAND})
 
@@ -29,12 +29,14 @@ add_dependencies(check check_unit_tests)
 # unit_test function
 function(UNIT_TEST TEST_NAME TEST_SRC)
   add_executable(${TEST_NAME} ${TEST_SRC})
-  target_link_libraries(${TEST_NAME} ${LIBRARIES})
+  target_link_libraries(${TEST_NAME} ${LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
   add_dependencies(${TEST_NAME} EspressoConfig)
-  
+
   add_test(${TEST_NAME} ${TEST_NAME})
-  add_dependencies(check_unit_tests ${TEST_NAME})  
+  add_dependencies(check_unit_tests ${TEST_NAME})
 endfunction(UNIT_TEST)
+
+# Add tests here
 
 unit_test(Vector_test Vector_test.cpp)
 unit_test(RuntimeError_test RuntimeError_test.cpp)
@@ -45,6 +47,11 @@ unit_test(RuntimeErrorCollector_test "${RuntimeErrorCollector_test_SRC}")
 
 set(Timer_test_SRC Timer_test.cpp ../utils/Timer.cpp)
 unit_test(Timer_test "${Timer_test_SRC}")
+
+unit_test(NumeratedContainer_test NumeratedContainer_test.cpp)
+
+set(MpiCallbacks_test_SRC  MpiCallbacks_test.cpp ../MpiCallbacks.cpp)
+unit_test(MpiCallbacks_test "${MpiCallbacks_test_SRC}")
 
 unit_test(ScriptInterface_test ScriptInterface_test.cpp)
 
