@@ -126,9 +126,6 @@ static int terminated = 0;
   CB(mpi_place_new_particle_slave)                                             \
   CB(mpi_remove_particle_slave)                                                \
   CB(mpi_bcast_constraint_slave)                                               \
-  CB(mpi_random_seed_slave)                                                    \
-  CB(mpi_random_get_stat_slave)                                                \
-  CB(mpi_random_set_stat_slave)                                                \
   CB(mpi_cap_forces_slave)                                                     \
   CB(mpi_get_constraint_force_slave)                                           \
   CB(mpi_get_configtemp_slave)                                                 \
@@ -178,14 +175,13 @@ static int terminated = 0;
   CB(mpi_external_potential_tabulated_read_potential_file_slave)               \
   CB(mpi_external_potential_sum_energies_slave)                                \
   CB(mpi_observable_lb_radial_velocity_profile_slave)                          \
-  CB(mpiRuntimeErrorCollectorGatherSlave)                                      \
   CB(mpi_check_runtime_errors_slave)                                           \
   CB(mpi_minimize_energy_slave)                                                \
   CB(mpi_gather_cuda_devices_slave)                                            \
   CB(mpi_thermalize_cpu_slave)                                                 \
   CB(mpi_scafacos_set_parameters_slave)                                        \
   CB(mpi_mpiio_slave)                                                          \
-  CB(mpi_gather_timers_slave)
+  CB(mpi_timers_slave)
 
 // create the forward declarations
 #define CB(name) void name(int node, int param);
@@ -2860,18 +2856,20 @@ void mpi_set_particle_gamma_rot(int pnode, int part, double gamma_rot[3])
 
   if (pnode == this_node) {
     Particle *p = local_particles[part];
-    /* here the setting actually happens, if the particle belongs to the local
-     * node */
+/* here the setting actually happens, if the particle belongs to the local
+ * node */
 #ifndef ROTATIONAL_INERTIA
     p->p.gamma_rot = gamma_rot;
 #else
-    for ( j = 0 ; j < 3 ; j++) p->p.gamma_rot[j] = gamma_rot[j];
+    for (j = 0; j < 3; j++)
+      p->p.gamma_rot[j] = gamma_rot[j];
 #endif
   } else {
 #ifndef ROTATIONAL_INERTIA
     MPI_Send(&gamma_rot, 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
 #else
-    for ( j = 0 ; j < 3 ; j++) MPI_Send(&(gamma_rot[j]), 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+    for (j = 0; j < 3; j++)
+      MPI_Send(&(gamma_rot[j]), 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
 #endif
   }
 
@@ -2886,15 +2884,14 @@ void mpi_set_particle_gamma_rot_slave(int pnode, int part) {
   if (pnode == this_node) {
     Particle *p = local_particles[part];
     MPI_Status status;
-    /* here the setting happens for nonlocal nodes */
+/* here the setting happens for nonlocal nodes */
 #ifndef ROTATIONAL_INERTIA
     MPI_Recv(&s_buf, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, &status);
     p->p.gamma_rot = s_buf;
 #else
-    for ( j = 0 ; j < 3 ; j++)
-    {
-    	MPI_Recv(&s_buf, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, &status);
-    	p->p.gamma_rot[j] = s_buf;
+    for (j = 0; j < 3; j++) {
+      MPI_Recv(&s_buf, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, &status);
+      p->p.gamma_rot[j] = s_buf;
     }
 #endif
   }
@@ -3146,11 +3143,25 @@ void mpi_gather_cuda_devices_slave(int dummy1, int dummy2) {
 #endif
 }
 
-void mpi_gather_timers_slave(int, int) {
-  map<string, Utils::Timing::Timer::Stats> my_stats =
-      Utils::Timing::Timer::get_stats();
+void mpi_timers_slave(int action, int) {
+  switch (action) {
+  case 0: {
+    map<string, Utils::Timing::Timer::Stats> my_stats =
+        Utils::Timing::Timer::get_stats();
 
-  comm_cart.send(0, SOME_TAG, my_stats);
+    comm_cart.send(0, SOME_TAG, my_stats);
+    break;
+  }
+  case 1:
+    Utils::Timing::Timer::reset_all();
+    break;
+  }
+}
+
+void mpi_reset_timers() {
+  Utils::Timing::Timer::reset_all();
+
+  mpi_call(mpi_timers_slave, 1, 0);
 }
 
 vector<map<string, Utils::Timing::Timer::Stats>> mpi_gather_timers() {
@@ -3158,7 +3169,7 @@ vector<map<string, Utils::Timing::Timer::Stats>> mpi_gather_timers() {
 
   ret[0] = Utils::Timing::Timer::get_stats();
 
-  mpi_call(mpi_gather_timers_slave, 0, 0);
+  mpi_call(mpi_timers_slave, 0, 0);
 
   for (int i = 1; i < ret.size(); ++i) {
     comm_cart.recv(i, SOME_TAG, ret[i]);
