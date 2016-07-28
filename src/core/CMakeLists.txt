@@ -23,6 +23,8 @@ add_custom_target(EspressoConfig DEPENDS config-features.hpp config-features.cpp
 add_dependencies(EspressoConfig myconfig)
 
 add_library(EspressoCore SHARED ${EspressoCore_SRC} config-features.cpp config-version.cpp)
+set_target_properties(EspressoCore PROPERTIES SOVERSION ${SOVERSION})
+install(TARGETS EspressoCore LIBRARY DESTINATION ${LIBDIR})
 add_dependencies(EspressoCore EspressoConfig)
 
 target_link_libraries(EspressoCore ${LIBRARIES} Actor ObjectInFluid ImmersedBoundary Shapes EspressoUtils)
@@ -42,6 +44,7 @@ if(CUDA)
   cuda_include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
   cuda_add_library(EspressoCuda SHARED ${EspressoCuda_SRC})
+  install(TARGETS EspressoCuda DESTINATION ${LIBDIR})
   add_dependencies(EspressoCuda EspressoConfig)
 
   set_target_properties(EspressoCuda PROPERTIES MACOSX_RPATH TRUE)
@@ -65,3 +68,4 @@ if(SCAFACOS_FOUND)
 endif(SCAFACOS_FOUND)
 
 add_subdirectory(utils)
+
