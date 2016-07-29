@@ -57,7 +57,11 @@ public:
     }
   }
 
-  void clear() { m_n = 0; }
+  void clear() {
+    m_n = 0;
+    m_min = std::numeric_limits<Scalar>::infinity();
+    m_max = -std::numeric_limits<Scalar>::infinity();
+  }
 
   int n() const { return m_n; }
 

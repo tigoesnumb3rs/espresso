@@ -46,7 +46,7 @@ void mpi_reset_timers();
 
 int tclcommand_timer(ClientData data, Tcl_Interp *interp, int argc,
                      char *argv[]) {
-  if (argc == 0) {
+  if (argc == 1) {
     auto timers = mpi_gather_timers();
     char buf[8];
 
@@ -58,8 +58,10 @@ int tclcommand_timer(ClientData data, Tcl_Interp *interp, int argc,
                          format_stats(it.second).c_str(), " } ", nullptr);
       }
     }
-  } else if(argv[0] == "reset") {
+  } else if ((argc == 2) && (string(argv[1]) == "reset")) {
     mpi_reset_timers();
+  } else {
+    return TCL_ERROR;
   }
 
   return TCL_OK;
