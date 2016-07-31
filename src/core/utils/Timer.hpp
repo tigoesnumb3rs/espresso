@@ -23,8 +23,8 @@ public:
   struct Stats {
   public:
     Stats() {}
-    Stats(double avg, double sig, double var, double min, double max, int n)
-        : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_n(n) {}
+    Stats(double avg, double sig, double var, double min, double max, double t, int n)
+        : m_avg(avg), m_sig(sig), m_var(var), m_min(min), m_max(max), m_t(t), m_n(n) {}
 
     double avg() const { return m_avg; }
 
@@ -36,10 +36,12 @@ public:
 
     double max() const { return m_max; }
 
+    double t() const { return m_t; }
+
     int n() const { return m_n; }
 
   private:
-    double m_avg, m_sig, m_var, m_min, m_max;
+    double m_avg, m_sig, m_var, m_min, m_max, m_t;
     int m_n;
 
     friend boost::serialization::access;
@@ -50,6 +52,7 @@ public:
       ar &m_var;
       ar &m_min;
       ar &m_max;
+      ar &m_t;
       ar &m_n;
     }
   };
@@ -67,7 +70,8 @@ public:
   Stats stats() const {
     return Stats(m_running_average.avg(), m_running_average.sig(),
                  m_running_average.var(), m_running_average.min(),
-                 m_running_average.max(), m_running_average.n());
+                 m_running_average.max(), m_running_average.t(),
+                 m_running_average.n());
   }
 
   void reset() { m_running_average.clear(); }

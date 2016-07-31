@@ -36,7 +36,7 @@ string format_stats(const Utils::Timing::Timer::Stats &stats) {
   ostringstream ss;
 
   ss << stats.avg() << " " << stats.sig() << " " << stats.var() << " "
-     << stats.min() << " " << stats.max() << " " << stats.n();
+     << stats.min() << " " << stats.max() << " " << stats.n() << " " << stats.t();
   return ss.str();
 }
 }
