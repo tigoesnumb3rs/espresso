@@ -320,7 +320,7 @@ void copy_part_data_to_gpu() {
   COMM_TRACE(printf("global_part_vars_host.communication_enabled = %d && global_part_vars_host.number_of_particles = %d\n", global_part_vars_host.communication_enabled, global_part_vars_host.number_of_particles));
   if ( global_part_vars_host.communication_enabled == 1 && global_part_vars_host.number_of_particles ) {
     cuda_mpi_get_particles(particle_data_host);
-    
+
     /** get espresso md particle values*/
     if ( this_node == 0 ) cudaMemcpyAsync(particle_data_device, particle_data_host, global_part_vars_host.number_of_particles * sizeof(CUDA_particle_data), cudaMemcpyHostToDevice, stream[0]);
     

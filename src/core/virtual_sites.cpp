@@ -22,6 +22,8 @@
 #include "virtual_sites.hpp"
 #include "pressure.hpp"
 
+#include "utils/Timer.hpp" 
+
 #ifdef VIRTUAL_SITES
 
 // The following four functions are independent of the specif
@@ -32,13 +34,18 @@ void update_mol_vel_pos()
    //replace this by a better implementation later!
 
    // ORDER MATTERS! Update_mol_vel may rely on correct positions of virtual particcles
+   auto &t_update_mol_pos = Utils::Timing::Timer::get_timer("update_mol_pos");
+   t_update_mol_pos.start();
    update_mol_pos();
+   t_update_mol_pos.stop();
    update_mol_vel();
 }
 
 void update_mol_vel()
 {
 #ifndef VIRTUAL_SITES_NO_VELOCITY
+  auto &t_update_mol_vel = Utils::Timing::Timer::get_timer("update_mol_vel");
+  t_update_mol_vel.start();
   Particle *p;
   int i, np, c;
   Cell *cell;
@@ -51,6 +58,7 @@ void update_mol_vel()
         update_mol_vel_particle(&p[i]);
     }
   }
+  t_update_mol_vel.stop();
 #endif
 }
 

@@ -129,7 +129,7 @@ void force_calc()
 #endif
 
 #ifdef WITH_INTRUSIVE_TIMINGS
-auto &t_cells_update_ghosts = Utils::Timing::Timer::get_timer("cells_update_ghosts");
+  auto &t_cells_update_ghosts = Utils::Timing::Timer::get_timer("cells_update_ghosts");
   t_cells_update_ghosts.start();
 #endif
   // Communication step: distribute ghost positions
@@ -140,7 +140,10 @@ auto &t_cells_update_ghosts = Utils::Timing::Timer::get_timer("cells_update_ghos
   
   // VIRTUAL_SITES pos (and vel for DPD) update for security reason !!!
 #ifdef VIRTUAL_SITES
+  auto &t_update_mol_vel_pos = Utils::Timing::Timer::get_timer("update_mol_vel_pos");
+  t_update_mol_vel_pos.start();
   update_mol_vel_pos();
+  t_update_mol_vel_pos.stop();
   ghost_communicator(&cell_structure.update_ghost_pos_comm);
 #endif
 
@@ -212,13 +215,15 @@ espressoSystemInterface.update();
 #endif
       } else {
 	auto &t = Utils::Timing::Timer::get_timer("calculate_verlet_ia");
-
 	t.start();
 	calculate_verlet_ia();
 	t.stop();
-      }
+    }
     } else {
-      calc_link_cell();
+    auto &t = Utils::Timing::Timer::get_timer("calc_link_cell");
+    t.start();
+    calc_link_cell();
+    t.stop();
     }
     break;
   case CELL_STRUCTURE_NSQUARE:
@@ -258,14 +263,20 @@ espressoSystemInterface.update();
 #endif
 
 #ifdef CUDA
+  auto &t = Utils::Timing::Timer::get_timer("copy_forces_from_GPU");
+  t.start();
   copy_forces_from_GPU();
+  t.stop();
 #endif
 
   // VIRTUAL_SITES distribute forces
 #ifdef VIRTUAL_SITES
   ghost_communicator(&cell_structure.collect_ghost_force_comm);
   init_forces_ghosts();
+  auto &t_distribute_mol_force = Utils::Timing::Timer::get_timer("distribute_mol_force");
+  t_distribute_mol_force.start();
   distribute_mol_force();
+  t_distribute_mol_force.stop();
 #endif
 
   // Communication Step: ghost forces
