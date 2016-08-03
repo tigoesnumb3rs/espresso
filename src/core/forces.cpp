@@ -126,9 +126,6 @@ void force_calc()
 #ifdef WITH_INTRUSIVE_TIMINGS
   auto &t = Utils::Timing::Timer::get_timer("force_calc");
   t.start();
-#endif
-
-#ifdef WITH_INTRUSIVE_TIMINGS
   auto &t_cells_update_ghosts = Utils::Timing::Timer::get_timer("cells_update_ghosts");
   t_cells_update_ghosts.start();
 #endif
@@ -140,10 +137,14 @@ void force_calc()
   
   // VIRTUAL_SITES pos (and vel for DPD) update for security reason !!!
 #ifdef VIRTUAL_SITES
+#ifdef WITH_INTRUSIVE_TIMINGS
   auto &t_update_mol_vel_pos = Utils::Timing::Timer::get_timer("update_mol_vel_pos");
   t_update_mol_vel_pos.start();
+#endif
   update_mol_vel_pos();
+#ifdef WITH_INTRUSIVE_TIMINGS
   t_update_mol_vel_pos.stop();
+#endif
   ghost_communicator(&cell_structure.update_ghost_pos_comm);
 #endif
 
@@ -204,15 +205,10 @@ espressoSystemInterface.update();
   case CELL_STRUCTURE_DOMDEC:
     if(dd.use_vList) {
       if (rebuild_verletlist) {
-#ifdef WITH_INTRUSIVE_TIMINGS
 	auto &t = Utils::Timing::Timer::get_timer("build_verlet_lists_and_calc_verlet_ia");
-	
 	t.start();
-#endif
 	build_verlet_lists_and_calc_verlet_ia();
-#ifdef WITH_INTRUSIVE_TIMINGS
 	t.stop();
-#endif
       } else {
 	auto &t = Utils::Timing::Timer::get_timer("calculate_verlet_ia");
 	t.start();
@@ -263,20 +259,28 @@ espressoSystemInterface.update();
 #endif
 
 #ifdef CUDA
+#ifdef WITH_INTRUSIVE_TIMINGS  
   auto &t = Utils::Timing::Timer::get_timer("copy_forces_from_GPU");
   t.start();
+#endif
   copy_forces_from_GPU();
+#ifdef WITH_INTRUSIVE_TIMINGS
   t.stop();
+#endif
 #endif
 
   // VIRTUAL_SITES distribute forces
 #ifdef VIRTUAL_SITES
   ghost_communicator(&cell_structure.collect_ghost_force_comm);
   init_forces_ghosts();
+#ifdef WITH_INTRUSIVE_TIMINGS
   auto &t_distribute_mol_force = Utils::Timing::Timer::get_timer("distribute_mol_force");
   t_distribute_mol_force.start();
+#endif
   distribute_mol_force();
+#ifdef WITH_INTRUSIVE_TIMINGS
   t_distribute_mol_force.stop();
+#endif
 #endif
 
   // Communication Step: ghost forces

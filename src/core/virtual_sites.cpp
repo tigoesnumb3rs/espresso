@@ -34,18 +34,24 @@ void update_mol_vel_pos()
    //replace this by a better implementation later!
 
    // ORDER MATTERS! Update_mol_vel may rely on correct positions of virtual particcles
+#ifdef WITH_INTRUSIVE_TIMINGS
    auto &t_update_mol_pos = Utils::Timing::Timer::get_timer("update_mol_pos");
    t_update_mol_pos.start();
+#endif
    update_mol_pos();
+#ifdef WITH_INTRUSIVE_TIMINGS
    t_update_mol_pos.stop();
+#endif
    update_mol_vel();
 }
 
 void update_mol_vel()
 {
 #ifndef VIRTUAL_SITES_NO_VELOCITY
+#ifdef WITH_INTRUSIVE_TIMINGS
   auto &t_update_mol_vel = Utils::Timing::Timer::get_timer("update_mol_vel");
   t_update_mol_vel.start();
+#endif
   Particle *p;
   int i, np, c;
   Cell *cell;
@@ -58,7 +64,9 @@ void update_mol_vel()
         update_mol_vel_particle(&p[i]);
     }
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
   t_update_mol_vel.stop();
+#endif
 #endif
 }
 
