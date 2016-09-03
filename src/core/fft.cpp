@@ -26,6 +26,8 @@
 
 #include "fft.hpp"
 
+#include "utils/Timer.hpp"
+
 #ifdef P3M
 
 #include <fftw3.h>
@@ -307,6 +309,10 @@ int fft_init(double **data, int *ca_mesh_dim, int *ca_mesh_margin,
 
 void fft_perform_forw(double *data)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_fftw_execute_dft = Utils::Timing::Timer::get_timer("fftw_execute_dft");
+#endif
+
   int i;
 
   /* int m,n,o; */
@@ -340,19 +346,37 @@ void fft_perform_forw(double *data)
     data[(2*i)+1] = 0;       /* complex value */
   }
   /* perform FFT (in/out is data)*/
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(fft.plan[1].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* ===== second direction ===== */
   FFT_TRACE(fprintf(stderr,"%d: fft_perform_forw: dir 2:\n",this_node));
   /* communication to current dir row format (in is data) */
   fft_forw_grid_comm(fft.plan[2], data, fft.data_buf);
   /* perform FFT (in/out is fft.data_buf)*/
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(fft.plan[2].our_fftw_plan,c_data_buf,c_data_buf);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* ===== third direction  ===== */
   FFT_TRACE(fprintf(stderr,"%d: fft_perform_forw: dir 3:\n",this_node));
   /* communication to current dir row format (in is fft.data_buf) */
   fft_forw_grid_comm(fft.plan[3], fft.data_buf, data);
   /* perform FFT (in/out is data)*/
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(fft.plan[3].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t_fftw_execute_dft.stop();
+#endif
   //fft_print_global_fft_mesh(fft.plan[3],data,1,0);
 
   /* REMARK: Result has to be in data. */
@@ -360,6 +384,9 @@ void fft_perform_forw(double *data)
 
 void fft_perform_back(double *data)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_fftw_execute_dft = Utils::Timing::Timer::get_timer("fftw_execute_dft");
+#endif
   int i;
   
   fftw_complex *c_data     = (fftw_complex *) data;
@@ -370,21 +397,40 @@ void fft_perform_back(double *data)
 
 
   /* perform FFT (in is data) */
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(fft.back[3].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* communicate (in is data)*/
   fft_back_grid_comm(fft.plan[3],fft.back[3],data,fft.data_buf);
  
   /* ===== second direction ===== */
   FFT_TRACE(fprintf(stderr,"%d: fft_perform_back: dir 2:\n",this_node));
   /* perform FFT (in is fft.data_buf) */
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(fft.back[2].our_fftw_plan,c_data_buf,c_data_buf);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
+
   /* communicate (in is fft.data_buf) */
   fft_back_grid_comm(fft.plan[2],fft.back[2],fft.data_buf,data);
 
   /* ===== first direction  ===== */
   FFT_TRACE(fprintf(stderr,"%d: fft_perform_back: dir 1:\n",this_node));
   /* perform FFT (in is data) */
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(fft.back[1].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* throw away the (hopefully) empty complex component (in is data)*/
   for(i=0;i<fft.plan[1].new_size;i++) {
     fft.data_buf[i] = data[2*i]; /* real value */
@@ -403,6 +449,10 @@ void fft_perform_back(double *data)
 
 void fft_forw_grid_comm(fft_forw_plan plan, double *in, double *out)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_fft_forw_grid_comm = Utils::Timing::Timer::get_timer("fft_forw_grid_comm");
+  t_fft_forw_grid_comm.start();
+#endif
   int i;
   MPI_Status status;
   double *tmp_ptr;
@@ -431,10 +481,17 @@ void fft_forw_grid_comm(fft_forw_plan plan, double *in, double *out)
     fft_unpack_block(fft.recv_buf, out, &(plan.recv_block[6*i]), 
 		 &(plan.recv_block[6*i+3]), plan.new_mesh, plan.element);
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fft_forw_grid_comm.stop();
+#endif
 }
 
 void fft_back_grid_comm(fft_forw_plan plan_f,  fft_back_plan plan_b, double *in, double *out)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_fft_back_grid_comm = Utils::Timing::Timer::get_timer("fft_back_grid_comm");
+  t_fft_back_grid_comm.start();
+#endif
   int i;
   MPI_Status status;
   double *tmp_ptr;
@@ -468,6 +525,9 @@ void fft_back_grid_comm(fft_forw_plan plan_f,  fft_back_plan plan_b, double *in,
     fft_unpack_block(fft.recv_buf, out, &(plan_f.send_block[6*i]), 
 		 &(plan_f.send_block[6*i+3]), plan_f.old_mesh, plan_f.element);
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t_fft_back_grid_comm.stop();
+#endif
 }
 
 #endif

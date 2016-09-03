@@ -39,6 +39,8 @@
 #include "constraint.hpp"
 #include "external_potential.hpp"
 
+#include "utils/Timer.hpp"
+
 /** Granularity of the verlet list */
 #define LIST_INCREMENT 20
 
@@ -403,6 +405,10 @@ void calculate_verlet_virials(int v_comp)
 
 void resize_verlet_list(PairList *pl)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_resize_verlet_list = Utils::Timing::Timer::get_timer("resize_verlet_list");
+  t_resize_verlet_list.start();
+#endif
   int diff;
   diff = pl->max - pl->n;
   if( diff > 2*LIST_INCREMENT ) {
@@ -410,5 +416,8 @@ void resize_verlet_list(PairList *pl)
     pl->max -= diff*LIST_INCREMENT;
     pl->pair = (Particle **)Utils::realloc(pl->pair, 2*pl->max*sizeof(Particle *));
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_resize_verlet_list.stop();
+#endif
 }
 

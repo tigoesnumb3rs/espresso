@@ -41,6 +41,8 @@
 #include "p3m_gpu_error.hpp"
 #endif
 
+#include "utils/Timer.hpp"
+
 #ifdef P3M
 
 /************************************************
@@ -519,6 +521,10 @@ void p3m_interpolate_charge_assignment_function()
 
 /* Template wrapper for p3m_do_charge_assign() */
 void p3m_charge_assign() {
+#ifdef WITH_INTRUSIVE_TIMINGS
+      auto &t_p3m_charge_assign = Utils::Timing::Timer::get_timer("");
+        t_p3m_charge_assign.start();
+#endif
   switch(p3m.params.cao) 
     {
     case 1:
@@ -543,6 +549,9 @@ void p3m_charge_assign() {
       p3m_do_charge_assign<7>();
       break;
     }
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_p3m_charge_assign.stop();
+#endif
 }
 
 /* assign the charges */
@@ -607,6 +616,10 @@ void p3m_do_assign_charge(double q,
 		       double real_pos[3],
 		       int cp_cnt)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_p3m_do_assign_charge = Utils::Timing::Timer::get_timer("p3m_do_assign_charge");
+  t_p3m_do_assign_charge.start();
+#endif
   int d, i0, i1, i2;
   double tmp0, tmp1;
   /* position of a particle in local mesh units */
@@ -699,6 +712,9 @@ void p3m_do_assign_charge(double q,
       q_ind += p3m.local_mesh.q_21_off;
     }
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t_p3m_do_assign_charge.stop();
+#endif
 }
 
 #ifdef P3M_STORE_CA_FRAC
@@ -815,6 +831,10 @@ static void P3M_assign_forces(double force_prefac, int d_rs)
 
 double p3m_calc_kspace_forces(int force_flag, int energy_flag)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+    auto &t_p3m_calc_kspace_forces = Utils::Timing::Timer::get_timer("p3m_calc_kspace_forces");
+    t_p3m_calc_kspace_forces.start();
+#endif
     int i,d,d_rs,ind,j[3];
     /**************************************************************/
     /* Prefactor for force */
@@ -832,8 +852,21 @@ double p3m_calc_kspace_forces(int force_flag, int energy_flag)
     /* Gather information for FFT grid inside the nodes domain (inner local mesh) */
     /* and Perform forward 3D FFT (Charge Assignment Mesh). */
     if (p3m.sum_q2 > 0) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+        auto &t_p3m_gather_fft_grid = Utils::Timing::Timer::get_timer("p3m_gather_fft_grid");
+        t_p3m_gather_fft_grid.start();
+#endif
         p3m_gather_fft_grid(p3m.rs_mesh);
+#ifdef WITH_INTRUSIVE_TIMINGS
+        t_p3m_gather_fft_grid.stop();
+
+        auto &t_fft_perform_forw = Utils::Timing::Timer::get_timer("fft_perform_forw");
+        t_fft_perform_forw.start();
+#endif  
         fft_perform_forw(p3m.rs_mesh);
+#ifdef WITH_INTRUSIVE_TIMINGS
+        t_fft_perform_forw.stop();
+#endif
     }
     //Note: after these calls, the grids are in the order yzx and not xyz anymore!!!
 
@@ -904,7 +937,14 @@ double p3m_calc_kspace_forces(int force_flag, int energy_flag)
                 }
             }
 	    /* Back FFT force component mesh */
+#ifdef WITH_INTRUSIVE_TIMINGS
+            auto &t_fft_perform_back = Utils::Timing::Timer::get_timer("fft_perform_back");
+            t_fft_perform_back.start();
+#endif
             fft_perform_back(p3m.rs_mesh);
+#ifdef WITH_INTRUSIVE_TIMINGS
+            t_fft_perform_back.stop();
+#endif
 	    /* redistribute force component mesh */
             p3m_spread_force_grid(p3m.rs_mesh);
 	    /* Assign force component from mesh to particle */
@@ -939,6 +979,9 @@ double p3m_calc_kspace_forces(int force_flag, int energy_flag)
       k_space_energy += p3m_calc_dipole_term(force_flag, energy_flag);
     }
 
+#ifdef WITH_INTRUSIVE_TIMINGS
+      t_p3m_calc_kspace_forces.stop();
+#endif
     return k_space_energy;
 }
 
@@ -1026,7 +1069,14 @@ void p3m_gather_fft_grid(double* themesh)
     }
     /* add recv block */
     if(p3m.sm.r_size[r_dir]>0) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+      auto &t_p3m_add_block = Utils::Timing::Timer::get_timer("p3m_add_block");
+      t_p3m_add_block.start();
+#endif
       p3m_add_block(p3m.recv_grid, themesh, p3m.sm.r_ld[r_dir], p3m.sm.r_dim[r_dir], p3m.local_mesh.dim); 
+#ifdef WITH_INTRUSIVE_TIMINGS
+      t_p3m_add_block.stop();
+#endif
     }
   }
 }
@@ -2181,8 +2231,14 @@ void p3m_calc_kspace_stress (double* stress) {
             node_k_space_stress[i] = 0.0;
             k_space_stress[i] = 0.0;
         }
-
+#ifdef WITH_INTRUSIVE_TIMINGS
+        auto &t_p3m_gather_fft_grid = Utils::Timing::Timer::get_timer("p3m_gather_fft_grid");
+        t_p3m_gather_fft_grid.start();
+#endif
         p3m_gather_fft_grid(p3m.rs_mesh);
+#ifdef WITH_INTRUSIVE_TIMINGS
+        t_p3m_gather_fft_grid.stop();
+#endif
         fft_perform_forw(p3m.rs_mesh);
         force_prefac = coulomb.prefactor / (2.0 * box_l[0] * box_l[1] * box_l[2]);
 

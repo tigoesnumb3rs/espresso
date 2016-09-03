@@ -27,6 +27,8 @@
 
 #include "fft-dipolar.hpp"
 
+#include "utils/Timer.hpp"
+
 #ifdef DP3M
 
 #include <fftw3.h>
@@ -303,6 +305,9 @@ int dfft_init(double **data,
 
 void dfft_perform_forw(double *data)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_fftw_execute_dft = Utils::Timing::Timer::get_timer("fftw_execute_dft");
+#endif
   int i;
   /* int m,n,o; */
   /* ===== first direction  ===== */
@@ -335,19 +340,37 @@ void dfft_perform_forw(double *data)
     data[(2*i)+1] = 0;       /* complex value */
   }
   /* perform FFT (in/out is data)*/
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(dfft.plan[1].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* ===== second direction ===== */
   FFT_TRACE(fprintf(stderr,"%d: dipolar fft_perform_forw: dir 2:\n",this_node));
   /* communication to current dir row format (in is data) */
   dfft_forw_grid_comm(dfft.plan[2], data, dfft.data_buf);
   /* perform FFT (in/out is data_buf)*/
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(dfft.plan[2].our_fftw_plan,c_data_buf,c_data_buf);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();                                                                                                                                                                                                                  
+#endif
   /* ===== third direction  ===== */
   FFT_TRACE(fprintf(stderr,"%d: dipolar fft_perform_forw: dir 3:\n",this_node));
   /* communication to current dir row format (in is data_buf) */
   dfft_forw_grid_comm(dfft.plan[3], dfft.data_buf, data);
   /* perform FFT (in/out is data)*/
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(dfft.plan[3].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();                                                                                                                                                                                                                  
+#endif
   //fft_print_global_fft_mesh(dfft.plan[3],data,1,0);
 
   /* REMARK: Result has to be in data. */
@@ -356,6 +379,9 @@ void dfft_perform_forw(double *data)
 
 void dfft_perform_back(double *data)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_fftw_execute_dft = Utils::Timing::Timer::get_timer("fftw_execute_dft");
+#endif
   int i;
 
   fftw_complex *c_data     = (fftw_complex *) data;
@@ -366,21 +392,39 @@ void dfft_perform_back(double *data)
 
 
   /* perform FFT (in is data) */
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(dfft.back[3].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t_fftw_execute_dft.stop();
+#endif
   /* communicate (in is data)*/
   dfft_back_grid_comm(dfft.plan[3],dfft.back[3],data,dfft.data_buf);
  
   /* ===== second direction ===== */
   FFT_TRACE(fprintf(stderr,"%d: dipolar fft_perform_back: dir 2:\n",this_node));
   /* perform FFT (in is data_buf) */
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(dfft.back[2].our_fftw_plan,c_data_buf,c_data_buf);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* communicate (in is data_buf) */
   dfft_back_grid_comm(dfft.plan[2],dfft.back[2],dfft.data_buf,data);
 
   /* ===== first direction  ===== */
   FFT_TRACE(fprintf(stderr,"%d: fft_perform_back: dir 1:\n",this_node));
   /* perform FFT (in is data) */
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.start();
+#endif
   fftw_execute_dft(dfft.back[1].our_fftw_plan,c_data,c_data);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_fftw_execute_dft.stop();
+#endif
   /* throw away the (hopefully) empty complex component (in is data)*/
   for(i=0;i<dfft.plan[1].new_size;i++) {
     dfft.data_buf[i] = data[2*i]; /* real value */

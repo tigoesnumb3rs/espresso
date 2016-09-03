@@ -192,7 +192,15 @@ espressoSystemInterface.update();
 #endif
   }
 
+
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_calc_long_range_forces = Utils::Timing::Timer::get_timer("calc_long_range_forces");
+  t_calc_long_range_forces.start();
+#endif
   calc_long_range_forces();
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_calc_long_range_forces.stop();
+#endif
 
   switch (cell_structure.type) {
   case CELL_STRUCTURE_LAYERED:

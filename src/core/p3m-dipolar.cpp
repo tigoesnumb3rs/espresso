@@ -48,6 +48,8 @@
 #include "cells.hpp"
 #include "tuning.hpp"
 
+#include "utils/Timer.hpp"
+
 #ifdef DP3M
 
 /************************************************
@@ -1257,7 +1259,14 @@ void dp3m_gather_fft_grid(double* themesh)
     }
     /* add recv block */
     if(dp3m.sm.r_size[r_dir]>0) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+      auto &t_p3m_add_block = Utils::Timing::Timer::get_timer("p3m_add_block");
+      t_p3m_add_block.start();
+#endif
       p3m_add_block(dp3m.recv_grid, themesh, dp3m.sm.r_ld[r_dir], dp3m.sm.r_dim[r_dir], dp3m.local_mesh.dim); 
+#ifdef WITH_INTRUSIVE_TIMINGS
+      t_p3m_add_block.stop();
+#endif
     }
   }
 }
