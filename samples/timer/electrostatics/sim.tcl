@@ -19,8 +19,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 #
 
+set backup_timer          20
+set n_part                100
+set int_n_times           100
+set int_steps             10
+set number_of_timers      22
+set output_file           [open "simulation.output" "w"]
+set backup_file           [open "simulation.backup" "w"]
+set sim_nodes             1
+set sim_procs             1
+
+puts  $output_file "\{"
+puts  $output_file "\"Nodes\":\"$sim_nodes\","
+puts  $output_file "\"Processes\":\"$sim_procs\","
+puts  $output_file "\"Backuprate\":\"$backup_timer\","
+puts  $output_file "\"Particles\":\"$n_part\","
+puts  $output_file "\"Runs\":\"$int_n_times\","
+puts  $output_file "\"IntPerRun\":\"$int_steps\","
+flush $output_file
+
+puts  $backup_file "\{"
+puts $backup_file "\"Nodes\":\"$sim_nodes\","
+puts $backup_file "\"Processes\":\"$sim_procs\","
+puts  $backup_file "\"Backuprate\":\"$backup_timer\","
+puts  $backup_file "\"Particles\":\"$n_part\","
+puts  $backup_file "\"Runs\":\"$int_n_times\","
+puts  $backup_file "\"IntPerRun\":\"$int_steps\","
+flush $backup_file
+
+
 # Set system parameters
-set n_part 200
+#set n_part 200
 set density 0.7
 set box_l [expr pow($n_part/$density,1./3.)]
 
@@ -96,14 +125,81 @@ for {set cap 20} {$cap < 200} {incr cap 20} {
 }
 inter forcecap 0
 
-for {set i 0} { $i < 20 } { incr i} {
+timer reset
+
+for {set i 0} { $i < $int_n_times } { incr i} {
     set temp [expr [analyze energy kinetic]/(($deg_free/2.0)*$n_part)]
     puts "t=[setmd time] E=[analyze energy total], T=$temp"
-    integrate $integ_steps
+    integrate $int_steps
 
-    set f [open "config_$i" "w"]
-    blockfile $f write tclvariable {box_l density}
-    blockfile $f write variable box_l
-    blockfile $f write particles {id pos type}
-    close $f
+    if {$i%$backup_timer==0} {
+        puts $backup_file "\"$i\": \["
+        set n 1
+        foreach t [timer] {
+            puts $backup_file "  \["
+            puts $backup_file "    \"[lindex $t 0]\","
+            puts $backup_file "    \"[lindex $t 1]\","
+            puts $backup_file "    \"[lindex $t 2]\","
+            puts $backup_file "    \"[lindex $t 3]\","
+            puts $backup_file "    \"[lindex $t 4]\","
+            puts $backup_file "    \"[lindex $t 5]\","
+            puts $backup_file "    \"[lindex $t 6]\","
+            puts $backup_file "    \"[lindex $t 7]\","
+            puts $backup_file "    \"[lindex $t 8]\""
+            if {$n%[expr {$number_of_timers * $sim_procs}]} {
+                puts $backup_file "  \],"
+            } else {
+                puts $backup_file "  \]"
+            }
+            incr n
+        }
+        puts $backup_file "  \],"
+        flush $backup_file
+    }
+
+
+
+#    set f [open "config_$i" "w"]
+#    blockfile $f write tclvariable {box_l density}
+#    blockfile $f write variable box_l
+#    blockfile $f write particles {id pos type}
+#    close $f
+}
+
+
+puts $output_file "\"Data\": \["
+set n 1
+foreach t [timer] {
+    puts $output_file "  \["
+    puts $output_file "    \"[lindex $t 0]\","
+    puts $output_file "    \"[lindex $t 1]\","
+    puts $output_file "    \"[lindex $t 2]\","
+    puts $output_file "    \"[lindex $t 3]\","
+    puts $output_file "    \"[lindex $t 4]\","
+    puts $output_file "    \"[lindex $t 5]\","
+    puts $output_file "    \"[lindex $t 6]\","
+    puts $output_file "    \"[lindex $t 7]\""
+    if {$n%[expr {$number_of_timers * $sim_procs}]} {
+        puts $output_file "  \],"
+    } else {
+        puts $output_file "  \]"
+    }
+    incr n
+}
+puts $output_file "\],"
+
+
+puts $output_file "\"RunsTaken\":\"$i\","
+puts $output_file "\"State\":\"SUCCESS\""
+puts $output_file "\}"
+flush $output_file
+
+puts $backup_file "\}"
+flush $backup_file
+
+
+
+puts "MPIPID FUNCTIONNAME MEAN STANDARD-DEVIATION VARIANCE MIN MAX #CALLS"
+foreach t [timer] {
+    puts $t
 }
