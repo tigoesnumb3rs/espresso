@@ -226,7 +226,11 @@ espressoSystemInterface.update();
 	t.stop();
       }
     } else {
+        
+	  auto &t_calc_link_cell = Utils::Timing::Timer::get_timer("calc_link_cell");
+	  t_calc_link_cell.start();
       calc_link_cell();
+	  t_calc_link_cell.stop();
     }
     break;
   case CELL_STRUCTURE_NSQUARE:

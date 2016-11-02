@@ -27,6 +27,8 @@
 #include "interaction_data.hpp"
 #include "energy.hpp"
 
+#include "utils/Timer.hpp"
+
 #ifdef CUDA
 
 /// MPI tag for cuda particle gathering
@@ -54,6 +56,11 @@ void cuda_bcast_global_part_params() {
 /*************** REQ_GETPARTS ************/
 void cuda_mpi_get_particles(CUDA_particle_data *particle_data_host)
 {
+#ifdef WITH_INTRUSIVE_TIMINGS
+    auto &t_cuda_mpi_get_particles = Utils::Timing::Timer::get_timer("cuda_mpi_get_particles");                              
+    t_cuda_mpi_get_particles.start();
+#endif
+
     int n_part;
     int g, pnode;
     Cell *cell;
@@ -160,6 +167,10 @@ void cuda_mpi_get_particles(CUDA_particle_data *particle_data_host)
     }
     COMM_TRACE(fprintf(stderr, "%d: finished get\n", this_node));
     free(sizes);
+
+#ifdef WITH_INTRUSIVE_TIMINGS
+   t_cuda_mpi_get_particles.stop();                                                                                                                    
+#endif
 }
 
 /* TODO: We should only transfer data for enabled methods,
