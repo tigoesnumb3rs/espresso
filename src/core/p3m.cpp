@@ -522,7 +522,7 @@ void p3m_interpolate_charge_assignment_function()
 /* Template wrapper for p3m_do_charge_assign() */
 void p3m_charge_assign() {
 #ifdef WITH_INTRUSIVE_TIMINGS
-      auto &t_p3m_charge_assign = Utils::Timing::Timer::get_timer("");
+      auto &t_p3m_charge_assign = Utils::Timing::Timer::get_timer("p3m_charge_assign");
         t_p3m_charge_assign.start();
 #endif
   switch(p3m.params.cao) 
