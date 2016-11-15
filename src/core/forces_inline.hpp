@@ -89,6 +89,8 @@
 #include "immersed_boundary/ibm_tribend.hpp"
 #endif
 
+#include "utils/Timer.hpp"
+
 /** initialize the forces for a ghost particle */
 inline void init_ghost_force(Particle *part)
 {
@@ -410,17 +412,44 @@ inline void add_non_bonded_pair_force(Particle *p1, Particle *p2,
            nptiso.p_vir[0] += eng;
        }
 #else
-       if (q1q2) p3m_add_pair_force(q1q2,d,dist2,dist,force);
+       if (q1q2) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+         auto &t_p3m_add_pair_force = Utils::Timing::Timer::get_timer("p3m_add_pair_force");
+         t_p3m_add_pair_force.start();
+#endif
+         p3m_add_pair_force(q1q2,d,dist2,dist,force);
+#ifdef WITH_INTRUSIVE_TIMINGS
+         t_p3m_add_pair_force.stop();
+#endif
+       }
 #endif
        break;
      }
 #endif
      case COULOMB_MMM1D:
-       if (q1q2) add_mmm1d_coulomb_pair_force(q1q2,d,dist2,dist,force);
-       break;
+       if (q1q2) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+         auto &t_add_mmm1d_coulomb_pair_force = Utils::Timing::Timer::get_timer("add_mmm1d_coulomb_pair_force");
+         t_add_mmm1d_coulomb_pair_force.start();
+#endif
+         add_mmm1d_coulomb_pair_force(q1q2,d,dist2,dist,force);
+#ifdef WITH_INTRUSIVE_TIMINGS
+         t_add_mmm1d_coulomb_pair_force.stop();
+#endif
+         break;
+       }
      case COULOMB_MMM2D:
-       if (q1q2) add_mmm2d_coulomb_pair_force(q1q2,d,dist2,dist,force);
-       break;
+       if (q1q2) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+         auto &t_add_mmm2d_coulomb_pair_force = Utils::Timing::Timer::get_timer("add_mmm2d_coulomb_pair_force");
+         t_add_mmm2d_coulomb_pair_force.start();
+#endif
+         add_mmm2d_coulomb_pair_force(q1q2,d,dist2,dist,force);
+#ifdef WITH_INTRUSIVE_TIMINGS
+         t_add_mmm2d_coulomb_pair_force.stop();
+#endif
+         break;
+       }
 #ifdef EWALD_GPU
      case COULOMB_EWALD_GPU:
        if (q1q2) add_ewald_gpu_coulomb_pair_force(p1,p2,d,dist,force);
@@ -902,9 +931,23 @@ inline void check_particle_force(Particle *part) {
 }
 
 inline void add_single_particle_force(Particle *p) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_add_bonded_force = Utils::Timing::Timer::get_timer("add_bonded_force");
+  t_add_bonded_force.start();
+#endif
   add_bonded_force(p);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_add_bonded_force.stop();
+#endif
 #ifdef CONSTRAINTS
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_add_constraints_forces = Utils::Timing::Timer::get_timer("add_constraints_forces");
+  t_add_constraints_forces.start();
+#endif
   add_constraints_forces(p);
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_add_constraints_forces.stop();
+#endif
 #endif
 #ifdef EXTERNAL_FORCES
   add_external_potential_forces(p);

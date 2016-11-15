@@ -24,6 +24,7 @@
 #include "grid.hpp"
 #include "domain_decomposition.hpp"
 
+#include "utils/Timer.hpp"
 
 using namespace std;
 
@@ -190,7 +191,10 @@ void queue_collision(int part1,int part2, double* point_of_collision) {
 void detect_collision(Particle* p1, Particle* p2)
 {
   // The check, whether collision detection is actually turned on is performed in forces.hpp
-
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_detect_collision = Utils::Timing::Timer::get_timer("detect_collision");
+  t_detect_collision.start();
+#endif
   int part1, part2, size;
   int counts[n_nodes];
   //TRACE(printf("%d: consider particles %d and %d\n", this_node, p1->p.identity, p2->p.identity));
@@ -300,6 +304,9 @@ void detect_collision(Particle* p1, Particle* p2)
 
     queue_collision(part1,part2,new_position);
   }
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_detect_collision.stop();
+#endif
 }
 
 

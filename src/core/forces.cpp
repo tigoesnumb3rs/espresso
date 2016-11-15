@@ -140,7 +140,14 @@ auto &t_cells_update_ghosts = Utils::Timing::Timer::get_timer("cells_update_ghos
   
   // VIRTUAL_SITES pos (and vel for DPD) update for security reason !!!
 #ifdef VIRTUAL_SITES
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_update_mol_vel_pos = Utils::Timing::Timer::get_timer("update_mol_vel_pos");
+  t_update_mol_vel_pos.start();
+#endif
   update_mol_vel_pos();
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_update_mol_vel_pos.stop();
+#endif
   ghost_communicator(&cell_structure.update_ghost_pos_comm);
 #endif
 
@@ -166,7 +173,16 @@ espressoSystemInterface.update();
 
   // transfer_momentum_gpu check makes sure the LB fluid doesn't get updated on integrate 0
   // this_node==0 makes sure it is the master node where the gpu exists
-  if (lattice_switch & LATTICE_LB_GPU && transfer_momentum_gpu && (this_node == 0) ) lb_calc_particle_lattice_ia_gpu();
+  if (lattice_switch & LATTICE_LB_GPU && transfer_momentum_gpu && (this_node == 0) ) {
+#ifdef WITH_INTRUSIVE_TIMINGS
+    auto &t_lb_calc_particle_lattice_ia_gpu = Utils::Timing::Timer::get_timer("lb_calc_particle_lattice_ia_gpu");
+    t_lb_calc_particle_lattice_ia_gpu.start();
+#endif
+    lb_calc_particle_lattice_ia_gpu();
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t_lb_calc_particle_lattice_ia_gpu.stop();
+#endif
+  }
 #endif // LB_GPU
 
 #ifdef ELECTROSTATICS
@@ -234,7 +250,10 @@ espressoSystemInterface.update();
     }
     break;
   case CELL_STRUCTURE_NSQUARE:
+    auto &t_nsq_calculate_ia = Utils::Timing::Timer::get_timer("nsq_calculate_ia");
+    t_nsq_calculate_ia.start();
     nsq_calculate_ia();
+    t_nsq_calculate_ia.stop();
     break;
   }
 
@@ -270,14 +289,28 @@ espressoSystemInterface.update();
 #endif
 
 #ifdef CUDA
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_copy_forces_from_GPU = Utils::Timing::Timer::get_timer("copy_forces_from_GPU");
+  t_copy_forces_from_GPU.start();
+#endif
   copy_forces_from_GPU();
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_copy_forces_from_GPU.stop();
+#endif
 #endif
 
   // VIRTUAL_SITES distribute forces
 #ifdef VIRTUAL_SITES
   ghost_communicator(&cell_structure.collect_ghost_force_comm);
   init_forces_ghosts();
+#ifdef WITH_INTRUSIVE_TIMINGS
+  auto &t_distribute_mol_force = Utils::Timing::Timer::get_timer("distribute_mol_force");
+  t_distribute_mol_force.start();
+#endif
   distribute_mol_force();
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_distribute_mol_force.stop();
+#endif
 #endif
 
   // Communication Step: ghost forces

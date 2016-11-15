@@ -478,7 +478,14 @@ void integrate_vv(int n_steps, int reuse_forces)
     //VIRTUAL_SITES update vel
 #ifdef VIRTUAL_SITES
     ghost_communicator(&cell_structure.update_ghost_pos_comm);
+#ifdef WITH_INTRUSIVE_TIMINGS
+    auto &t_update_mol_vel = Utils::Timing::Timer::get_timer("update_mol_vel");
+    t_update_mol_vel.start();
+#endif
     update_mol_vel();
+#ifdef WITH_INTRUSIVE_TIMINGS
+    t_update_mol_vel.stop();
+#endif
     if (check_runtime_errors()) break;
 #endif
 

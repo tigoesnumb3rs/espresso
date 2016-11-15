@@ -276,10 +276,17 @@ void announce_resort_particles()
 
 int cells_get_n_particles()
 {
+#ifdef WITH_INTRUSIVE_TIMINGS  
+  auto &t_cells_get_n_particles = Utils::Timing::Timer::get_timer("cells_get_n_particles");
+  t_cells_get_n_particles.start();
+#endif
   int c, cnt = 0;
   for (c = 0; c < local_cells.n; c++)
     cnt += local_cells.cell[c]->n;
   return cnt;
+#ifdef WITH_INTRUSIVE_TIMINGS
+  t_cells_get_n_particles.stop();
+#endif
 }
 
 /*************************************************/
